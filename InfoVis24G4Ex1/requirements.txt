@@ -1,3 +1,6 @@
 polars
 seaborn
 pyarrow
+geodatasets
+geopandas
+shapely
