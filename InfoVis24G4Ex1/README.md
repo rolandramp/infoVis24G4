@@ -8,3 +8,9 @@ install Anaconda
 - `conda create -n InfoVisEx1 python=3.11`
 - `conda activate InfoVisEx1`
 - `pip install -r requirements.txt`
+
+## Neo4j
+
+best way is to run it in docker
+
+`docker compose up`
