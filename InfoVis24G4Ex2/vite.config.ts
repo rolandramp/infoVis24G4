@@ -3,7 +3,7 @@ export default {
     target: ["chrome105", "safari15", "firefox105"],
   },
   // Change this to your repo name
-  base: "/D3-App-Template/",
+  base: "/InfoVis24G4Ex2/",
   server: {
     host: true,
     port: 8080,

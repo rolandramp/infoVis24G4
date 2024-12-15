@@ -18,5 +18,5 @@ with Ctlr + P + Q the container can be left an the service is running on.
 
 with `docker attach <container_id>` the container can be entered again.
 
-
+Template used from [D3-App-Template](https://github.com/domoritz/D3-App-Template/blob/main/package.json)
 
