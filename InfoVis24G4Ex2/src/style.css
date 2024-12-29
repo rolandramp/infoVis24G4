@@ -1,7 +1,7 @@
 :root {
   font-family: sans-serif;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 12px;
+  line-height: 12px;
   font-weight: 400;
 
   font-synthesis: none;
@@ -12,9 +12,61 @@
 }
 
 html {
-  max-width: 100ch;
+  max-width: 150ch;
   padding: 3em 1em;
   margin: auto;
   line-height: 1.75;
   font-size: 1.25em;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 150px;
+  background-color: #2c3e50;
+  color: white;
+  padding: 5px;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.sidebar ul {
+  list-style-type: none;
+}
+
+.sidebar ul li {
+  margin: 5px 0;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.sidebar ul li a:hover {
+  text-decoration: underline;
+}
+
+/* Main Content Styling */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: #ecf0f1;
+}
+
+.main-content h1 {
+  margin-bottom: 12px;
+}
+
+.main-content p {
+  font-size: 12px;
 }

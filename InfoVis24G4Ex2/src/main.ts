@@ -76,9 +76,5 @@ select.on("change", () => {
   update_coordinates(venue)
 });
 
-// Update the chart with the first location.
-// update("Brno");
 
-// Add the chart to the DOM.
-// app.appendChild(chart.element);
 app.appendChild(worldMap.element);

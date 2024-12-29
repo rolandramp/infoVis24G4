@@ -2,13 +2,22 @@
 <html lang="en" xmlns="http://www.w3.org/1999/html">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InfoVisEx2</title>
+    <title>InfoVisEx2 G4</title>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <h1>Data Visualization</h1>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <div class="sidebar" id="sidebar-1">
+      <h1>Sidebar</h1>
+      <div id="sidebar"></div>
+      <script type="module" src="/src/sidebar.ts"></script>
+    </div>
+    <div class="main-content" id="main-content">
+      <h1>Data Visualization</h1>
+      <div id="app"></div>
+      <script type="module" src="/src/main.ts"></script>
+    </div>
   </body>
 </html>

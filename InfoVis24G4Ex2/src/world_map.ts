@@ -19,7 +19,7 @@ export function world_map() {
   const width = 800;
   const height = 600;
 
-  const svg = d3
+  let svg = d3
     .create("svg")
     .attr("width", width)
     .attr("height", height)
