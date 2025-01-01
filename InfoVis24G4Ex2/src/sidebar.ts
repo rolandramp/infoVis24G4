@@ -1,6 +1,9 @@
 import * as d3 from 'd3';
+import { fetchCities, fetchCountries, init_db } from "./queries";
 
 const sidebar = document.querySelector("#sidebar")!;
+
+await init_db();
 
 const begin_year_slider = d3.select(sidebar).append('input')
   .attr('type', 'range')
@@ -128,12 +131,13 @@ const country_select_box = d3.select(sidebar).append('select')
   .attr('id', 'country_select_box_id');
 
 // Add options to the select box
-const options = ['Österreich', 'USA', 'Japan', 'Deutschland', 'France', 'Italia'];
-options.forEach(option => {
+const countries = await fetchCountries()
+
+for (const country of countries) {
   country_select_box.append('option')
-    .attr('value', option)
-    .text(option);
-});
+    .attr('value', country)
+    .text(country['e.country']);
+}
 
 // Add an event listener to the select box
 country_select_box.on('change', function() {
@@ -151,12 +155,13 @@ const city_select_box = d3.select(sidebar).append('select')
   .attr('id', 'city_select_box_id');
 
 // Add options to the select box
-const cityOptions = ['Vienna', 'New York', 'Tokyo', 'Berlin', 'Paris', 'Rome'];
-cityOptions.forEach(option => {
+
+const cities = await fetchCities();
+for (const city of cities) {
   city_select_box.append('option')
-    .attr('value', option)
-    .text(option);
-});
+    .attr('value', city)
+    .text(city['e.city']);
+}
 
 // Add an event listener to the select box
 city_select_box.on('change', function() {

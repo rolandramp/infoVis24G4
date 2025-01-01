@@ -40,8 +40,6 @@ await init_db();
 
 const venue = await fetchVenues();
 
-
-
 // Create a select element for the locations.
 const select = d3.select(app).append("select");
 for (const location of venue) {

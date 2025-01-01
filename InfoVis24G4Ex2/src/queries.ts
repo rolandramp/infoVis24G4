@@ -37,3 +37,21 @@ export async function fetchVenues(): Promise<Table<{ venue: Utf8 }>> {
     ORDER BY "e.venue"
   `);
 }
+
+export async function fetchCities(): Promise<Table<{ city: Utf8 }>> {
+  const conn = await db.connect();
+  return await conn.query(`
+    SELECT DISTINCT "e.city"
+    FROM artvis.parquet
+    ORDER BY "e.city"
+  `);
+}
+
+export async function fetchCountries(): Promise<Table<{ country: Utf8 }>> {
+  const conn = await db.connect();
+  return await conn.query(`
+    SELECT DISTINCT "e.country"
+    FROM artvis.parquet
+    ORDER BY "e.country"
+  `);
+}
