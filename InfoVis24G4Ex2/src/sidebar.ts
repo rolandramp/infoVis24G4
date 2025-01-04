@@ -1,9 +1,14 @@
 import * as d3 from 'd3';
-import { fetchCities, fetchCountries, init_db } from "./queries";
+import { fetchCities, fetchCountries, init_db, fetchDataByCityAndCountry } from "./queries";
+import { world_map } from "./world_map";
 
 const sidebar = document.querySelector("#sidebar")!;
+const app = document.querySelector("#app")!;
 
 await init_db();
+
+const worldMap = world_map();
+app.appendChild(worldMap.element);
 
 const begin_year_slider = d3.select(sidebar).append('input')
   .attr('type', 'range')
@@ -135,14 +140,16 @@ const countries = await fetchCountries()
 
 for (const country of countries) {
   country_select_box.append('option')
-    .attr('value', country)
+    .attr('value', country['e.country'])
     .text(country['e.country']);
 }
 
 // Add an event listener to the select box
 country_select_box.on('change', function() {
-  const selectedValue = d3.select(this).property('value');
-  console.log('Selected value:', selectedValue);
+  const city = city_select_box.property("value");
+  const country = country_select_box.property("value");
+  update_coordinates(city, country);
+  console.log('Selected value:', country);
 });
 
 // Create a label for the select box
@@ -159,14 +166,22 @@ const city_select_box = d3.select(sidebar).append('select')
 const cities = await fetchCities();
 for (const city of cities) {
   city_select_box.append('option')
-    .attr('value', city)
+    .attr('value', city['e.city'])
     .text(city['e.city']);
 }
 
 // Add an event listener to the select box
 city_select_box.on('change', function() {
-  const selectedValue = d3.select(this).property('value');
-  console.log('Selected city:', selectedValue);
+  const city = city_select_box.property("value");
+  const country = country_select_box.property("value");
+  update_coordinates(city, country);
+  console.log('Selected city:', city);
 });
 
-
+async function update_coordinates(city: string = 'Vienna', country: string = 'AT') {
+    fetchDataByCityAndCountry(city,country).then((data) => {
+      const lati = data.getChild("e.latitude")!.toJSON().map((d) => d);
+      const longi = data.getChild("e.longitude")!.toJSON().map((d) => d);
+      worldMap.update([{ longitude: longi[0], latitude: lati[0] }]);
+  });
+}
