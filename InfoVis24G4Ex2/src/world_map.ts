@@ -96,9 +96,19 @@ export function world_map() {
 
   function update(data: { latitude: number, longitude: number }[]) {
     console.log(data);
-    countries.selectAll('circle')
-      .data(data)
-      .enter()
+    const circles = countries.selectAll('circle')
+      .data(data, d => `${d.latitude},${d.longitude}`);
+
+    // Remove old circles
+    circles.exit().remove();
+
+    // Update existing circles
+    circles
+      .attr('cx', d => projection([d.longitude, d.latitude])[0])
+      .attr('cy', d => projection([d.longitude, d.latitude])[1]);
+
+    // Add new circles
+    circles.enter()
       .append('circle')
       .attr('cx', d => projection([d.longitude, d.latitude])[0])
       .attr('cy', d => projection([d.longitude, d.latitude])[1])
