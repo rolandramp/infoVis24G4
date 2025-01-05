@@ -95,6 +95,7 @@ export function world_map() {
   }
 
   function update(data: { latitude: number, longitude: number }[]) {
+    console.log(data);
     countries.selectAll('circle')
       .data(data)
       .enter()

@@ -38,9 +38,18 @@ export async function fetchCountries(): Promise<Table<{ country: Utf8 }>> {
 
 export async function fetchDataByCityAndCountry(city: string = 'Vienna', country: string = 'AT'): Promise<Table<{ latitude: Utf8; longitude: Utf8 }>> {
   const conn = await db.connect();
-  return await conn.query(`
+  let query = `
     SELECT DISTINCT "e.latitude", "e.longitude"
     FROM artvis.parquet
-    WHERE "e.city" = '${city}' AND "e.country" = '${country}'
-  `);
+    WHERE 1=1
+  `;
+  if (city) {
+    query += ` AND "e.city" = '${city}'`;
+  }
+  if (country) {
+    query += ` AND "e.country" = '${country}'`;
+  }
+  const result = await conn.query(query);
+  console.log(result)
+  return result;
 }
