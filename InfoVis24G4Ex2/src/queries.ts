@@ -18,11 +18,12 @@ export async function fetchCoordinates(venue: string): Promise<Table<{ latitude:
   `);
 }
 
-export async function fetchCities(): Promise<Table<{ city: Utf8 }>> {
+export async function fetchCities(country: string = ''): Promise<Table<{ city: Utf8 }>> {
   const conn = await db.connect();
   return await conn.query(`
     SELECT DISTINCT "e.city"
     FROM artvis.parquet
+    WHERE "e.country" = '${country}'
     ORDER BY "e.city"
   `);
 }

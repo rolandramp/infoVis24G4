@@ -145,9 +145,20 @@ for (const country of countries) {
 }
 
 // Add an event listener to the country select box
-country_select_box.on('change', function() {
-  const city = city_select_box.property("value");
+country_select_box.on('change', async function() {
   const country = country_select_box.property("value");
+
+  // Fetch and update the city options based on the selected country
+  const cities = await fetchCities(country);
+  city_select_box.selectAll('option').remove();
+  for (const city of cities) {
+    city_select_box.append('option')
+      .attr('value', city['e.city'])
+      .text(city['e.city']);
+  }
+
+  const city = city_select_box.property("value");
+  // Update coordinates based on the new selection
   update_coordinates(city, country);
   console.log('Selected value:', country);
 });
@@ -162,7 +173,7 @@ const city_select_box = d3.select(sidebar).append('select')
   .attr('id', 'city_select_box_id');
 
 // Fetch and add options to the city select box
-const cities = await fetchCities();
+let cities = await fetchCities('AT');
 for (const city of cities) {
   city_select_box.append('option')
     .attr('value', city['e.city'])
