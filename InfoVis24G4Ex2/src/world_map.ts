@@ -1,5 +1,6 @@
 import * as d3 from "d3"
 import {legendColor} from "d3-svg-legend"
+import { init_db, fetchDataByCityAndCountry } from "./queries";
 
 interface GeoJson {
   type: string;
@@ -16,6 +17,9 @@ interface GeoJson {
 }
 
 export function world_map() {
+  // Initialize the database
+  init_db();
+
   const width = 800;
   const height = 600;
 
@@ -62,7 +66,7 @@ export function world_map() {
   const color = d3.scaleOrdinal(d3.schemeCategory10);
   svg.append("g")
     .attr("transform", "translate(10,20)")
-    .call(legendColor().scale(color).title("Exibitions").shapeWidth(30).orient("vertical"));
+    .call(legendColor().scale(color).shapeWidth(30).orient("vertical"));
 
   function reset() {
     countries.transition().style("fill", null);
@@ -116,9 +120,32 @@ export function world_map() {
       .attr('fill', 'blue');
   }
 
+  // Function to update coordinates based on selected city and country
+  async function update_coordinates(city: string = 'Vienna', country: string = 'AT') {
+    try {
+      // Fetch data by city and country
+      const data = await fetchDataByCityAndCountry(city, country);
+      const latitudes = data.getChild("e.latitude")!.toJSON();
+      const longitudes = data.getChild("e.longitude")!.toJSON();
+
+      // Map the latitude and longitude values into an array of objects
+      const coordinates = latitudes.map((lat, index) => ({
+        latitude: lat,
+        longitude: longitudes[index]
+      }));
+
+      // Update the world map with all the new coordinates
+      update(coordinates);
+    } catch (error) {
+      // Handle any errors that occur during the fetch or update process
+      console.error("Error updating coordinates:", error);
+    }
+  }
+
   return {
     element: svg.node()!,
-    update
+    update,
+    update_coordinates
   };
 
 }

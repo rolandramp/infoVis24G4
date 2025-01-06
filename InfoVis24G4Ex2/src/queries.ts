@@ -54,3 +54,17 @@ export async function fetchDataByCityAndCountry(city: string = 'Vienna', country
   console.log(result)
   return result;
 }
+
+export async function fetchCountriesWithExhibitions(): Promise<Table<{ country: Utf8, exhibition_count: number }>> {
+  const conn = await db.connect();
+  let query = `
+    SELECT "e.country", COUNT(*) as exhibition_count
+    FROM artvis.parquet
+    WHERE 1=1
+  `;
+  query += `
+    GROUP BY "e.country"
+    ORDER BY exhibition_count DESC
+  `;
+  return await conn.query(query);
+}
