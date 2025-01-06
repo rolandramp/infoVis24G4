@@ -1,6 +1,6 @@
 import * as d3 from "d3"
 import {legendColor} from "d3-svg-legend"
-import { init_db, fetchDataByCityAndCountry } from "./queries";
+import { init_db, fetchDataByCityAndCountry, fetchCountriesWithExhibitions, translate_iso_to_geojson } from "./queries";
 
 interface GeoJson {
   type: string;
@@ -16,7 +16,7 @@ interface GeoJson {
   }[];
 }
 
-export function world_map() {
+export async function world_map() {
   // Initialize the database
   init_db();
 
@@ -45,17 +45,38 @@ export function world_map() {
 
   const countries = g.append("g");
 
-  d3.json<GeoJson>("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(data) {
-    if (data) {
-      countries.selectAll("path")
-        .data(data.features)
-        .enter().append("path")
-        .on("click", clicked)
-        .attr("d", d => path(d as any) || "")
-        .attr("fill", "#67a598")
-        .attr("stroke", "#fff");
+  const exhibitionCounts = new Map<string, number>();
+  // Fetch the exhibition data
+  const countriesWithExhibitions = await fetchCountriesWithExhibitions()
 
-    }
+  for (const row of countriesWithExhibitions) {
+    exhibitionCounts.set(translate_iso_to_geojson(row['country']), row['exhibition_count']);
+  }
+
+
+  console.log('exhibitionCounts',Array.from(exhibitionCounts.values()))
+  console.log('array Max',d3.max(Array.from(exhibitionCounts.values())))
+
+  // Create a color scale
+  const color_c = d3.scaleSequential(d3.interpolateBlues)
+    .domain([0, d3.max(Array.from(exhibitionCounts.values()).map(v => Number(v))) || 0]);
+
+  d3.json<GeoJson>("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
+    .then(function(data) {
+      if (data) {
+        countries.selectAll("path")
+          .data(data.features)
+          .enter()
+          .append("path")
+            .on("click", clicked)
+            .attr("d", d => path(d as any) || "")
+            .attr("fill", d => {
+              const count = exhibitionCounts.get(d.id) || 0;
+              return color_c(Number(count));
+            })
+          .attr("stroke", "#fff");
+
+      }
   })
 
 

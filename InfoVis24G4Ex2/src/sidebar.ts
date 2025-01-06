@@ -10,8 +10,8 @@ const app = document.querySelector("#app")!;
 await init_db();
 
 // Create the world map and append it to the app
-const worldMap = world_map();
-app.appendChild(worldMap.element);
+const worldMap = await world_map();
+app.appendChild((await worldMap).element);
 
 const slider = sliderBottom().min(1902).max(1916).step(1).width(120).ticks(2);
 
