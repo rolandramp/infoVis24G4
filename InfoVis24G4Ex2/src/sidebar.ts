@@ -13,6 +13,14 @@ await init_db();
 const worldMap = await world_map();
 app.appendChild((await worldMap).element);
 
+
+d3.select(sidebar).append('div').attr('id','buttonContainerId');
+d3.select('buttonContainerId').append('div').attr('id','mapViewButtonId');
+d3.select('mapViewButtonId').append('button').attr('text','Graph View').attr('id','MapViewButtonButtonId');
+
+
+
+
 const slider = sliderBottom().min(1902).max(1916).step(1).width(120).ticks(2);
 
 const g = d3
@@ -25,12 +33,14 @@ const g = d3
 
 g.call(slider);
 
+d3.select(sidebar).append('h4').text('Events from').style("margin-bottom", "5px");
+
 // Create a slider for the beginning year
 const begin_year_slider = d3.select(sidebar).append('input')
   .attr('type', 'range')
   .attr('min', '1902')
   .attr('max', '1916')
-  .attr('value', '50')
+  .attr('value', '1902')
   .attr('step', '1')
   .style('width', '100%');
 
@@ -46,12 +56,13 @@ begin_year_slider.on('input', function() {
   console.log('Slider value:', value);
 });
 
+d3.select(sidebar).append('h4').text('Events to').style("margin-bottom", "5px");
 // Create a slider for the end year
 const end_year_slider = d3.select(sidebar).append('input')
   .attr('type', 'range')
   .attr('min', '1902')
   .attr('max', '1916')
-  .attr('value', '50')
+  .attr('value', '1916')
   .attr('step', '1')
   .style('width', '100%');
 
@@ -67,13 +78,16 @@ end_year_slider.on('input', function() {
   console.log('Slider value:', value);
 });
 
+d3.select(sidebar).append('h4').text('Eventtype').style("margin-bottom", "5px");
+
 // Create a group for the exhibition type checkboxes
 const exhibition_type_checkboxGroup = d3.select(sidebar).append('div').attr('id', 'exhibition_type_checkboxGroup');
 
 // Create the solo exhibition checkbox
 const solo_checkbox = exhibition_type_checkboxGroup.append('input')
   .attr('type', 'checkbox')
-  .attr('id', 'solo_checkbox_id');
+  .attr('id', 'solo_checkbox_id')
+  .style("margin-left","10px");
 exhibition_type_checkboxGroup.append('label')
   .attr('for', 'solo_checkbox_id')
   .text('Solo');
@@ -81,7 +95,8 @@ exhibition_type_checkboxGroup.append('label')
 // Create the group exhibition checkbox
 const group_checkbox = exhibition_type_checkboxGroup.append('input')
   .attr('type', 'checkbox')
-  .attr('id', 'group_checkbox_id');
+  .attr('id', 'group_checkbox_id')
+  .style("margin-left","10px");
 exhibition_type_checkboxGroup.append('label')
   .attr('for', 'group_checkbox_id')
   .text('Group');
@@ -89,7 +104,8 @@ exhibition_type_checkboxGroup.append('label')
 // Create the auction checkbox
 const auction_checkbox = exhibition_type_checkboxGroup.append('input')
   .attr('type', 'checkbox')
-  .attr('id', 'auction_checkbox_id');
+  .attr('id', 'auction_checkbox_id')
+  .style("margin-left","10px");
 exhibition_type_checkboxGroup.append('label')
   .attr('for', 'auction_checkbox_id')
   .text('Auction');
@@ -110,40 +126,48 @@ auction_checkbox.on('change', function() {
   console.log('Checkbox 3 is checked:', isChecked);
 });
 
+d3.select(sidebar).append('h4').text('Gender').style("margin-bottom", "5px");
+
 // Create a group for the gender checkboxes
 const gender_checkboxGroup = d3.select(sidebar).append('div').attr('id', 'gender_checkboxGroup');
 
 // Create the male checkbox
 const male_checkbox = gender_checkboxGroup.append('input')
-  .attr('type', 'checkbox')
-  .attr('id', 'male_checkbox_id');
+    .attr('type', 'checkbox')
+    .attr('id', 'male_checkbox_id')
+    .style("margin-left","10px");
 gender_checkboxGroup.append('label')
-  .attr('for', 'male_checkbox_id')
-  .text('Male');
+    .attr('for', 'male_checkbox_id')
+    .text('Male');
 
 // Create the female checkbox
 const female_checkbox = gender_checkboxGroup.append('input')
-  .attr('type', 'checkbox')
-  .attr('id', 'female_checkbox_id');
+    .attr('type', 'checkbox')
+    .attr('id', 'female_checkbox_id')
+    .style("margin-left","10px");
 gender_checkboxGroup.append('label')
-  .attr('for', 'female_checkbox_id')
-  .text('Female');
+    .attr('for', 'female_checkbox_id')
+    .text('Female');
 
 // Add event listeners to the gender checkboxes
-male_checkbox.on('change', function() {
+male_checkbox.on('change', function () {
   const isChecked = d3.select(this).property('checked');
   console.log('Male checkbox is checked:', isChecked);
 });
 
-female_checkbox.on('change', function() {
+female_checkbox.on('change', function () {
   const isChecked = d3.select(this).property('checked');
   console.log('Female checkbox is checked:', isChecked);
 });
 
+d3.select(sidebar).append('h4').text('Event location').style("margin-bottom", "5px");
+
+
 // Create a label for the country select box
 d3.select(sidebar).append('label')
   .attr('for', 'country_select_box_id')
-  .text('Select Country:');
+  .text('Select Country:')
+  .style("margin-left","10px");
 
 // Create a select box for countries
 const country_select_box = d3.select(sidebar).append('select')
@@ -176,10 +200,13 @@ country_select_box.on('change', async function() {
   console.log('Selected value:', country);
 });
 
+d3.select(sidebar).append('br');
+
 // Create a label for the city select box
 d3.select(sidebar).append('label')
   .attr('for', 'city_select_box_id')
-  .text('Select City:');
+  .text('Select City:')
+  .style("margin-left","10px");
 
 // Create a select box for cities
 const city_select_box = d3.select(sidebar).append('select')
