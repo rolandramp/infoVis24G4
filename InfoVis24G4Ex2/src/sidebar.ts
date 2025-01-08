@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { fetchCities, fetchCountries, init_db, fetchDataByCityAndCountry } from "./queries";
 import { world_map } from "./world_map";
+import { sliderBottom } from 'd3-simple-slider';
 
 const sidebar = document.querySelector("#sidebar")!;
 const app = document.querySelector("#app")!;
@@ -9,8 +10,20 @@ const app = document.querySelector("#app")!;
 await init_db();
 
 // Create the world map and append it to the app
-const worldMap = world_map();
-app.appendChild(worldMap.element);
+const worldMap = await world_map();
+app.appendChild((await worldMap).element);
+
+const slider = sliderBottom().min(1902).max(1916).step(1).width(120).ticks(2);
+
+const g = d3
+  .select(sidebar)
+  .append('svg')
+  .attr('width', 150)
+  .attr('height', 80)
+  .append('g')
+  .attr('transform', 'translate(30,30)');
+
+g.call(slider);
 
 // Create a slider for the beginning year
 const begin_year_slider = d3.select(sidebar).append('input')
@@ -159,7 +172,7 @@ country_select_box.on('change', async function() {
 
   const city = city_select_box.property("value");
   // Update coordinates based on the new selection
-  update_coordinates(city, country);
+  worldMap.update_coordinates(city, country);
   console.log('Selected value:', country);
 });
 
@@ -184,28 +197,7 @@ for (const city of cities) {
 city_select_box.on('change', function() {
   const city = city_select_box.property("value");
   const country = country_select_box.property("value");
-  update_coordinates(city, country);
+  worldMap.update_coordinates(city, country);
   console.log('Selected city:', city);
 });
 
-// Function to update coordinates based on selected city and country
-async function update_coordinates(city: string = 'Vienna', country: string = 'AT') {
-  try {
-    // Fetch data by city and country
-    const data = await fetchDataByCityAndCountry(city, country);
-    const latitudes = data.getChild("e.latitude")!.toJSON();
-    const longitudes = data.getChild("e.longitude")!.toJSON();
-
-    // Map the latitude and longitude values into an array of objects
-    const coordinates = latitudes.map((lat, index) => ({
-      latitude: lat,
-      longitude: longitudes[index]
-    }));
-
-    // Update the world map with all the new coordinates
-    worldMap.update(coordinates);
-  } catch (error) {
-    // Handle any errors that occur during the fetch or update process
-    console.error("Error updating coordinates:", error);
-  }
-}
