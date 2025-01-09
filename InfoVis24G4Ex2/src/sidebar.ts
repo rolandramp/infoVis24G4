@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { fetchCities, fetchCountries, init_db, fetchDataByCityAndCountry } from "./queries";
 import { world_map } from "./world_map";
+import {grahp_map} from "./graph";
 
 const sidebar = document.querySelector("#sidebar")!;
 const app = document.querySelector("#app")!;
@@ -10,12 +11,57 @@ await init_db();
 
 // Create the world map and append it to the app
 const worldMap = await world_map();
+//const graphMap = await grahp_map();
 app.appendChild((await worldMap).element);
 
+let showMapView = true;
+let showGraphView = false;
 
-d3.select(sidebar).append('div').attr('id','buttonContainerId');
-d3.select('buttonContainerId').append('div').attr('id','mapViewButtonId');
-d3.select('mapViewButtonId').append('button').attr('text','Graph View').attr('id','MapViewButtonButtonId');
+d3.select(sidebar).append('div').attr('id','buttonContainerId').style('margin-top', '30px');
+const showGraphButton = d3.select('#buttonContainerId').append('button').attr('id','graphViewButtonId')
+    .text('Graph View') // Set the button label
+    .style('font-weight', 'bold')
+    .style('color', 'black') // Set the text color to black
+    .style('width', '40%') // Set the button width to 40px
+    .style('height', '20px') // Optionally, set a height for the button
+    .style('border', '1px solid #ccc') // Optional: Add a border
+    .style('border-radius', '4px') // Optional: Add rounded corners
+    .style('background-color', 'lightgrey') // Optional: Set the background color
+    .style('margin-left', '10px')
+    .style('cursor', 'pointer')
+    .on('click', () => {
+      if (!showGraphView){
+        showGraphView = true;
+        showMapView = false;
+      }
+      showGraphButton.style('background-color', showGraphView ? 'white' : 'lightgrey');
+      showMapButton.style('background-color', showMapView ? 'white' : 'lightgrey');
+      app.removeChild(worldMap.element);
+//      app.appendChild(graphMap.element);
+    });
+
+const showMapButton = d3.select('#buttonContainerId').append('button').attr('id','mapViewButtonId')
+    .style('font-weight', 'bold')
+    .text('Map View') // Set the button label
+    .style('color', 'black') // Set the text color to black
+    .style('width', '40%') // Set the button width to 40px
+    .style('height', '20px') // Optionally, set a height for the button
+    .style('border', '1px solid #ccc') // Optional: Add a border
+    .style('border-radius', '4px') // Optional: Add rounded corners
+    .style('background-color', 'white') // Optional: Set the background color
+    .style('margin-right', '10px')
+    .style('margin-left', '10px')
+    .style('cursor', 'pointer')
+    .on('click', () => {
+      if (!showMapView){
+        showGraphView = false;
+        showMapView = true;
+      }
+      showMapButton.style('background-color', showMapView ?  'white' : 'lightgrey');
+      showGraphButton.style('background-color', showGraphView ? 'white' : 'lightgrey');
+      app.appendChild(worldMap.element);
+//      app.removeChild(graphMap.element);
+    });
 
 let solo_bool:boolean = true;
 let group_bool:boolean = true;
@@ -25,7 +71,7 @@ let female_bool:boolean = true;
 let exibition_start_year:bigint = 1902n;
 let exibition_end_year:bigint = 1916n;
 
-d3.select(sidebar).append('h4').text('Events from').style("margin-bottom", "5px");
+d3.select(sidebar).append('h4').text('Events from').style('margin-bottom', '5px');
 
 // Create a slider for the beginning year
 const begin_year_slider = d3.select(sidebar).append('input')
