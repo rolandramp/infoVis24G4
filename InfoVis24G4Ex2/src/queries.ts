@@ -259,8 +259,8 @@ export async function fetchDataByCityAndCountry(city: string = 'Vienna', country
 }
 
 export async function fetchCountriesWithExhibitions(
-  start_date: Date = new Date('1902-01-01'),
-  end_date: Date = new Date('1916-01-01'),
+  start_date: bigint = 1902n,
+  end_date: bigint = 1916n,
   solo: boolean = true,
   group: boolean = true,
   auction: boolean = true,
@@ -274,6 +274,10 @@ export async function fetchCountriesWithExhibitions(
       FROM artvis.parquet
       WHERE 1=1
   `;
+
+  if (start_date) {
+    query += ` AND "e.startdate" >= ${start_date}`;
+  }
 
   if (!solo || !group || !auction) {
     query += ` AND "e.type" IN (`;

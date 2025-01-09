@@ -1,7 +1,6 @@
 import * as d3 from 'd3';
 import { fetchCities, fetchCountries, init_db, fetchDataByCityAndCountry } from "./queries";
 import { world_map } from "./world_map";
-import { sliderBottom } from 'd3-simple-slider';
 
 const sidebar = document.querySelector("#sidebar")!;
 const app = document.querySelector("#app")!;
@@ -23,19 +22,8 @@ let group_bool:boolean = true;
 let auction_bool:boolean = true;
 let male_bool:boolean = true;
 let female_bool:boolean = true;
-
-
-const slider = sliderBottom().min(1902).max(1916).step(1).width(120).ticks(2);
-
-const g = d3
-  .select(sidebar)
-  .append('svg')
-  .attr('width', 150)
-  .attr('height', 80)
-  .append('g')
-  .attr('transform', 'translate(30,30)');
-
-g.call(slider);
+let exibition_start_year:bigint = 1902n;
+let exibition_end_year:bigint = 1916n;
 
 d3.select(sidebar).append('h4').text('Events from').style("margin-bottom", "5px");
 
@@ -56,7 +44,9 @@ const begin_year_silderValue = d3.select(sidebar).append('span')
 // Update the span text when the begin_year_slider value changes
 begin_year_slider.on('input', function() {
   const value = d3.select(this).property('value');
-  begin_year_silderValue.text(value);
+  exibition_start_year = value
+  begin_year_silderValue.text(value.toString());
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Slider value:', value);
 });
 
@@ -77,8 +67,10 @@ const end_year_silderValue = d3.select(sidebar).append('span')
 
 // Update the span text when the end_year_slider value changes
 end_year_slider.on('input', function() {
-  const value = d3.select(this).property('value');
-  end_year_silderValue.text(value);
+  const value :bigint = d3.select(this).property('value');
+  exibition_end_year = value
+  end_year_silderValue.text(value.toString());
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Slider value:', value);
 });
 
@@ -121,21 +113,21 @@ exhibition_type_checkboxGroup.append('label')
 solo_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
   solo_bool = isChecked;
-  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Checkbox Solo is checked:', isChecked);
 });
 
 group_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
   group_bool = isChecked;
-  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Checkbox Group is checked:', isChecked);
 });
 
 auction_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
   auction_bool = isChecked;
-  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Checkbox Aution is checked:', isChecked);
 });
 
@@ -168,14 +160,14 @@ gender_checkboxGroup.append('label')
 male_checkbox.on('change', function () {
   const isChecked = d3.select(this).property('checked');
   male_bool = isChecked;
-  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Male checkbox is checked:', isChecked);
 });
 
 female_checkbox.on('change', function () {
   const isChecked = d3.select(this).property('checked');
   female_bool = isChecked;
-  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Female checkbox is checked:', isChecked);
 });
 
