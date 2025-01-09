@@ -171,11 +171,15 @@ export async function world_map() {
   // Function to update the choropleth map
   async function updateChoroplethMap(solo: boolean = true,
                                      group: boolean = true,
-                                     auction: boolean = true) {
+                                     auction: boolean = true,
+                                     male: boolean = true,
+                                     female: boolean = true) {
     console.log('updateChoroplethMap',solo,group,auction)
     const countriesWithExhibitions = await fetchCountriesWithExhibitions(undefined,undefined,solo,
       group,
-      auction);
+      auction,
+      male,
+      female);
     const exhibitionCounts = new Map<string, number>();
 
     for (const row of countriesWithExhibitions) {

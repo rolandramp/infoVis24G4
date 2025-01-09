@@ -263,7 +263,9 @@ export async function fetchCountriesWithExhibitions(
   end_date: Date = new Date('1916-01-01'),
   solo: boolean = true,
   group: boolean = true,
-  auction: boolean = true
+  auction: boolean = true,
+  male: boolean = true,
+  female: boolean = true
 ): Promise<Table<{ country: Utf8, exhibition_count: number }>> {
   console.log('fetchCountriesWithExhibitions',solo,group,auction)
   const conn = await db.connect();
@@ -280,6 +282,15 @@ export async function fetchCountriesWithExhibitions(
     if (group) types.push("'group'");
     if (auction) types.push("'auction'");
     query += types.join(", ");
+    query += `)`;
+  }
+
+  if (!male || !female ) {
+    query += ` AND "a.gender" IN (`;
+    const genders = [];
+    if (male) genders.push("'M'");
+    if (female) genders.push("'F'");
+    query += genders.join(", ");
     query += `)`;
   }
 
