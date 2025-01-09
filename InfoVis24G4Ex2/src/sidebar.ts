@@ -18,7 +18,9 @@ d3.select(sidebar).append('div').attr('id','buttonContainerId');
 d3.select('buttonContainerId').append('div').attr('id','mapViewButtonId');
 d3.select('mapViewButtonId').append('button').attr('text','Graph View').attr('id','MapViewButtonButtonId');
 
-
+let solo_bool:boolean = true;
+let group_bool:boolean = true;
+let auction_bool:boolean = true;
 
 
 const slider = sliderBottom().min(1902).max(1916).step(1).width(120).ticks(2);
@@ -87,6 +89,7 @@ const exhibition_type_checkboxGroup = d3.select(sidebar).append('div').attr('id'
 const solo_checkbox = exhibition_type_checkboxGroup.append('input')
   .attr('type', 'checkbox')
   .attr('id', 'solo_checkbox_id')
+  .attr('checked', true) // Set as checked by default
   .style("margin-left","10px");
 exhibition_type_checkboxGroup.append('label')
   .attr('for', 'solo_checkbox_id')
@@ -96,6 +99,7 @@ exhibition_type_checkboxGroup.append('label')
 const group_checkbox = exhibition_type_checkboxGroup.append('input')
   .attr('type', 'checkbox')
   .attr('id', 'group_checkbox_id')
+  .attr('checked', true) // Set as checked by default
   .style("margin-left","10px");
 exhibition_type_checkboxGroup.append('label')
   .attr('for', 'group_checkbox_id')
@@ -105,6 +109,7 @@ exhibition_type_checkboxGroup.append('label')
 const auction_checkbox = exhibition_type_checkboxGroup.append('input')
   .attr('type', 'checkbox')
   .attr('id', 'auction_checkbox_id')
+  .attr('checked', true) // Set as checked by default
   .style("margin-left","10px");
 exhibition_type_checkboxGroup.append('label')
   .attr('for', 'auction_checkbox_id')
@@ -113,17 +118,23 @@ exhibition_type_checkboxGroup.append('label')
 // Add event listeners to the exhibition type checkboxes
 solo_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
-  console.log('Checkbox 1 is checked:', isChecked);
+  solo_bool = isChecked;
+  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool);
+  console.log('Checkbox Solo is checked:', isChecked);
 });
 
 group_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
-  console.log('Checkbox 2 is checked:', isChecked);
+  group_bool = isChecked;
+  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool);
+  console.log('Checkbox Group is checked:', isChecked);
 });
 
 auction_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
-  console.log('Checkbox 3 is checked:', isChecked);
+  auction_bool = isChecked;
+  worldMap.updateChoroplethMap(solo_bool, group_bool, auction_bool);
+  console.log('Checkbox Aution is checked:', isChecked);
 });
 
 d3.select(sidebar).append('h4').text('Gender').style("margin-bottom", "5px");
@@ -133,18 +144,20 @@ const gender_checkboxGroup = d3.select(sidebar).append('div').attr('id', 'gender
 
 // Create the male checkbox
 const male_checkbox = gender_checkboxGroup.append('input')
-    .attr('type', 'checkbox')
-    .attr('id', 'male_checkbox_id')
-    .style("margin-left","10px");
+  .attr('type', 'checkbox')
+  .attr('id', 'male_checkbox_id')
+  .attr('checked', true) // Set as checked by default
+  .style("margin-left","10px");
 gender_checkboxGroup.append('label')
     .attr('for', 'male_checkbox_id')
     .text('Male');
 
 // Create the female checkbox
 const female_checkbox = gender_checkboxGroup.append('input')
-    .attr('type', 'checkbox')
-    .attr('id', 'female_checkbox_id')
-    .style("margin-left","10px");
+  .attr('type', 'checkbox')
+  .attr('id', 'female_checkbox_id')
+  .attr('checked', true) // Set as checked by default
+  .style("margin-left","10px");
 gender_checkboxGroup.append('label')
     .attr('for', 'female_checkbox_id')
     .text('Female');

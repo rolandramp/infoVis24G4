@@ -83,11 +83,16 @@ export async function world_map() {
 
   svg.call(zoom);
 
-  // Append the legend.
-  const color = d3.scaleOrdinal(d3.schemeCategory10);
+  // Append the legend
+  const legend = legendColor()
+    .scale(color_c)
+    .shapeWidth(200)
+    .orient("horizontal")
+    .labelFormat(d3.format(".0f"));
+
   svg.append("g")
     .attr("transform", "translate(10,20)")
-    .call(legendColor().scale(color).shapeWidth(30).orient("vertical"));
+    .call(legend);
 
   function reset() {
     countries.transition().style("fill", null);
@@ -163,10 +168,46 @@ export async function world_map() {
     }
   }
 
+  // Function to update the choropleth map
+  async function updateChoroplethMap(solo: boolean = true,
+                                     group: boolean = true,
+                                     auction: boolean = true) {
+    console.log('updateChoroplethMap',solo,group,auction)
+    const countriesWithExhibitions = await fetchCountriesWithExhibitions(undefined,undefined,solo,
+      group,
+      auction);
+    const exhibitionCounts = new Map<string, number>();
+
+    for (const row of countriesWithExhibitions) {
+      exhibitionCounts.set(translate_iso_to_geojson(row['country']), row['exhibition_count']);
+    }
+
+    const color_c = d3.scaleSequential(d3.interpolateBlues)
+      .domain([0, d3.max(Array.from(exhibitionCounts.values()).map(v => Number(v))) || 0]);
+
+    countries.selectAll("path")
+      .attr("fill", d => {
+        const count = exhibitionCounts.get(d.id) || 0;
+        return color_c(Number(count));
+      });
+
+    // Update the legend
+    svg.select("g.legend").remove();
+    svg.append("g")
+      .attr("class", "legend")
+      .attr("transform", "translate(10,20)")
+      .call(legendColor()
+        .scale(color_c)
+        .shapeWidth(200)
+        .orient("horizontal")
+        .labelFormat(d3.format(".0f")));
+  }
+
   return {
     element: svg.node()!,
     update,
-    update_coordinates
+    update_coordinates,
+    updateChoroplethMap
   };
 
 }

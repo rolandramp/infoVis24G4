@@ -2,6 +2,7 @@ import { Table, Utf8 } from "apache-arrow";
 import { db } from "./duckdb";
 import parquet from "./../data/artvis.parquet?url";
 
+
 const isoToGeoJsonMap: { [key: string]: string } = {
   "AF": "AFG",
   "AL": "ALB",
@@ -206,6 +207,7 @@ const isoToGeoJsonMap: { [key: string]: string } = {
 
 export async function init_db():Promise<void> {
   const res = await fetch(parquet);
+  console.log('res',res)
   await db.registerFileBuffer("artvis.parquet", new Uint8Array(await res.arrayBuffer()));
 }
 
@@ -256,18 +258,50 @@ export async function fetchDataByCityAndCountry(city: string = 'Vienna', country
   return result;
 }
 
-export async function fetchCountriesWithExhibitions(): Promise<Table<{ country: Utf8, exhibition_count: number }>> {
+export async function fetchCountriesWithExhibitions(
+  start_date: Date = new Date('1902-01-01'),
+  end_date: Date = new Date('1916-01-01'),
+  solo: boolean = true,
+  group: boolean = true,
+  auction: boolean = true
+): Promise<Table<{ country: Utf8, exhibition_count: number }>> {
+  console.log('fetchCountriesWithExhibitions',solo,group,auction)
   const conn = await db.connect();
   let query = `
-    SELECT "e.country" as country, COUNT(*) as exhibition_count
-    FROM artvis.parquet
+      SELECT "e.country" as country, COUNT(*) as exhibition_count
+      FROM artvis.parquet
+      WHERE 1=1
+  `;
+
+  if (!solo || !group || !auction) {
+    query += ` AND "e.type" IN (`;
+    const types = [];
+    if (solo) types.push("'solo'");
+    if (group) types.push("'group'");
+    if (auction) types.push("'auction'");
+    query += types.join(", ");
+    query += `)`;
+  }
+
+  query += `
     GROUP BY "e.country"
     ORDER BY exhibition_count DESC
   `;
-
   return await conn.query(query);
 }
 
 export function translate_iso_to_geojson(iso: string): string {
   return isoToGeoJsonMap[iso];
+}
+
+export async function describeArtvisTable(): Promise<void> {
+  const conn = await db.connect();
+  const result = await conn.query(`
+    SELECT * FROM artvis.parquet LIMIT 1
+  `);
+
+  console.log("Description of artvis.parquet table:",result);
+  //result.forEach((row: any) => {
+  //  console.log(`Column: ${row.name}, Type: ${row.type}`);
+  //});
 }
