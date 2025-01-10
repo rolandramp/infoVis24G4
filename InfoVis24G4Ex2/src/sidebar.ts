@@ -93,6 +93,8 @@ begin_year_slider.on('input', function() {
   exibition_start_year = value
   begin_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool)
+
   console.log('Slider value:', value);
 });
 
@@ -117,6 +119,7 @@ end_year_slider.on('input', function() {
   exibition_end_year = value
   end_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Slider value:', value);
 });
 
@@ -160,6 +163,7 @@ solo_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
   solo_bool = isChecked;
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Checkbox Solo is checked:', isChecked);
 });
 
@@ -167,6 +171,7 @@ group_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
   group_bool = isChecked;
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Checkbox Group is checked:', isChecked);
 });
 
@@ -174,6 +179,7 @@ auction_checkbox.on('change', function() {
   const isChecked = d3.select(this).property('checked');
   auction_bool = isChecked;
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Checkbox Aution is checked:', isChecked);
 });
 
@@ -207,6 +213,7 @@ male_checkbox.on('change', function () {
   const isChecked = d3.select(this).property('checked');
   male_bool = isChecked;
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Male checkbox is checked:', isChecked);
 });
 
@@ -214,6 +221,7 @@ female_checkbox.on('change', function () {
   const isChecked = d3.select(this).property('checked');
   female_bool = isChecked;
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Female checkbox is checked:', isChecked);
 });
 
@@ -253,7 +261,7 @@ country_select_box.on('change', async function() {
 
   const city = city_select_box.property("value");
   // Update coordinates based on the new selection
-  worldMap.update_coordinates(city, country);
+  updateCityCircles(city, country, exibition_start_year);
   console.log('Selected value:', country);
 });
 
@@ -281,7 +289,19 @@ for (const city of cities) {
 city_select_box.on('change', function() {
   const city = city_select_box.property("value");
   const country = country_select_box.property("value");
-  worldMap.update_coordinates(city, country);
+  updateCityCircles(city, country, exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
   console.log('Selected city:', city);
 });
+
+async function updateCityCircles(city, country, exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool) {
+  try {
+    // Wait for update_coordinates to complete
+    await worldMap.update_coordinates(city, country);
+
+    // Update tooltips after coordinates have been updated
+    worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, solo_bool, group_bool, auction_bool, male_bool ,female_bool);
+  } catch (error) {
+    console.error("Error updating the world map:", error);
+  }
+}
 

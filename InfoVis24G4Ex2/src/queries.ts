@@ -305,6 +305,60 @@ export async function fetchCountriesWithExhibitions(
   return await conn.query(query);
 }
 
+export async function fetchExhibitionsByCityAndCountry(
+  start_date: bigint = 1902n,
+  end_date: bigint = 1916n,
+  solo: boolean = true,
+  group: boolean = true,
+  auction: boolean = true,
+  male: boolean = true,
+  female: boolean = true
+): Promise<Table<{ exhibition_count: number }>> {
+  console.log('fetchExhibitionsByCityAndCountry', solo, group, auction);
+
+  const conn = await db.connect();
+  let query = `
+      SELECT "e.country" as country, "e.city" as city, COUNT(*) as exhibition_count,
+      SUM("e.paintings") as paintings_count
+      FROM artvis.parquet
+      WHERE 1=1
+  `;
+
+  if (start_date) {
+    query += ` AND "e.startdate" >= ${start_date}`;
+  }
+
+  if (end_date) {
+    query += ` AND "e.startdate" <= ${end_date}`;
+  }
+
+  if (!solo || !group || !auction) {
+    query += ` AND "e.type" IN (`;
+    const types = [];
+    if (solo) types.push("'solo'");
+    if (group) types.push("'group'");
+    if (auction) types.push("'auction'");
+    query += types.join(", ");
+    query += `)`;
+  }
+
+  if (!male || !female) {
+    query += ` AND "a.gender" IN (`;
+    const genders = [];
+    if (male) genders.push("'M'");
+    if (female) genders.push("'F'");
+    query += genders.join(", ");
+    query += `)`;
+  }
+
+  query += `
+    GROUP BY "e.country", "e.city"
+    ORDER BY exhibition_count DESC
+  `;
+  return await conn.query(query);
+}
+
+
 export function translate_iso_to_geojson(iso: string): string {
   return isoToGeoJsonMap[iso];
 }

@@ -1,7 +1,7 @@
 import * as d3 from "d3"
 import {legendColor} from "d3-svg-legend"
 import { init_db, fetchDataByCityAndCountry, fetchCountriesWithExhibitions, translate_iso_to_geojson } from "./queries";
-
+import { fetchExhibitionsByCityAndCountry } from "./queries";
 interface GeoJson {
   type: string;
   features: {
@@ -126,7 +126,7 @@ export async function world_map() {
     g.attr("stroke-width", 1 / transform.k);
   }
 
-  function update(data: { latitude: number, longitude: number }[]) {
+  function update(data: { latitude: number, longitude: number, city: String, country: String }[]) {
     console.log(data);
     const circles = countries.selectAll('circle')
       .data(data, d => `${d.latitude},${d.longitude}`);
@@ -140,7 +140,7 @@ export async function world_map() {
       .attr('cy', d => projection([d.longitude, d.latitude])[1]);
 
     // Add new circles
-    circles.enter()
+    const newCircles = circles.enter()
       .append('circle')
       .attr('cx', d => projection([d.longitude, d.latitude])[0])
       .attr('cy', d => projection([d.longitude, d.latitude])[1])
@@ -159,7 +159,9 @@ export async function world_map() {
       // Map the latitude and longitude values into an array of objects
       const coordinates = latitudes.map((lat, index) => ({
         latitude: lat,
-        longitude: longitudes[index]
+        longitude: longitudes[index],
+        city: city,
+        country: country
       }));
 
       // Update the world map with all the new coordinates
@@ -168,6 +170,41 @@ export async function world_map() {
       // Handle any errors that occur during the fetch or update process
       console.error("Error updating coordinates:", error);
     }
+  }
+
+  async function updateCityTooltips(exhibition_start_date: bigint = 1902n,
+                                     exhibition_end_date: bigint = 1916n,
+                                     solo: boolean = true,
+                                     group: boolean = true,
+                                     auction: boolean = true,
+                                     male: boolean = true,
+                                     female: boolean = true
+  ) {
+    console.log('updateCityTooltips',solo,group,auction)
+    const citiesWithExhibitions = await fetchExhibitionsByCityAndCountry(exhibition_start_date,exhibition_end_date,solo,
+      group,
+      auction,
+      male,
+      female);
+    const exhibitionCounts = new Map<string, number>();
+    const paintingsCounts = new Map<string, number>();
+  
+    for (const row of citiesWithExhibitions) {
+      exhibitionCounts.set(row['city'], row['exhibition_count']);
+      paintingsCounts.set(row['city'], row['paintings_count']);
+    }
+    console.log('exhibitionCounts',exhibitionCounts);
+    
+    attachTooltip(
+      countries.selectAll("circle"),
+      d => {
+        const exhibitionCount = exhibitionCounts.get(d.city) || 0;
+        const paintingsCount = paintingsCounts.get(d.city) || 0;
+        return `<strong>City:</strong> ${d.city}<br>
+      <strong>Exhibitions:</strong> ${exhibitionCount}<br>
+      <strong>Paintings:</strong> ${paintingsCount}<br>`
+      }
+    ); 
   }
 
   // Function to update the choropleth map
@@ -220,7 +257,8 @@ export async function world_map() {
     element: svg.node()!,
     update,
     update_coordinates,
-    updateChoroplethMap
+    updateChoroplethMap,
+    updateCityTooltips
   };
 
 }
