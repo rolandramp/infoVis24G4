@@ -45,12 +45,32 @@ export async function world_map() {
 
   const countries = g.append("g");
 
+  const countryNames = new Map<string, number>();
   const exhibitionCounts = new Map<string, number>();
+  const soloCounts = new Map<string, number>();
+  const groupCounts = new Map<string, number>();
+  const auctionCounts = new Map<string, number>();
+  const paintingsCounts = new Map<string, number>();
+  const artistCounts = new Map<string, number>();
+  const malePercs = new Map<string, number>();
+  const femalePercs = new Map<string, number>();
+  const earliest_year = new Map<string, number>();
+  const latest_year = new Map<string, number>();
   // Fetch the exhibition data
-  const countriesWithExhibitions = await fetchCountriesWithExhibitions()
+  const countriesWithExhibitions = await fetchCountriesWithExhibitions();
 
   for (const row of countriesWithExhibitions) {
+    countryNames.set(translate_iso_to_geojson(row['country']), row['country']);
     exhibitionCounts.set(translate_iso_to_geojson(row['country']), row['exhibition_count']);
+    soloCounts.set(translate_iso_to_geojson(row['country']), row['solo_count']);
+    groupCounts.set(translate_iso_to_geojson(row['country']), row['group_count']);
+    auctionCounts.set(translate_iso_to_geojson(row['country']), row['auction_count']);
+    paintingsCounts.set(translate_iso_to_geojson(row['country']), row['paintings_count']);
+    artistCounts.set(translate_iso_to_geojson(row['country']), row['artist_count']);
+    malePercs.set(translate_iso_to_geojson(row['country']), row['male_percentage']);
+    femalePercs.set(translate_iso_to_geojson(row['country']), row['female_percentage']);
+    earliest_year.set(translate_iso_to_geojson(row['country']), row['earliest_year']);
+    latest_year.set(translate_iso_to_geojson(row['country']), row['latest_year']);
   }
 
 
@@ -77,10 +97,8 @@ export async function world_map() {
           .attr("stroke", "#fff")
       }
 
-      attachTooltip(
-        countries.selectAll("path"),
-        d => `<strong>Exhibitions:</strong> ${exhibitionCounts.get(d.id) || 0}`
-      );
+      updateCountryTooltips(countries, countryNames, exhibitionCounts, soloCounts, groupCounts,
+         auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
   })
 
   svg.call(zoom);
@@ -187,22 +205,50 @@ export async function world_map() {
       male,
       female);
     const exhibitionCounts = new Map<string, number>();
+    const soloCounts = new Map<string, number>();
+    const groupCounts = new Map<string, number>();
+    const auctionCounts = new Map<string, number>();
     const paintingsCounts = new Map<string, number>();
+    const artistCounts = new Map<string, number>();
+    const malePercs = new Map<string, number>();
+    const femalePercs = new Map<string, number>();
+    const earliest_year = new Map<string, number>();
+    const latest_year = new Map<string, number>();
   
     for (const row of citiesWithExhibitions) {
       exhibitionCounts.set(row['city'], row['exhibition_count']);
+      soloCounts.set(row['city'], row['solo_count']);
+      groupCounts.set(row['city'], row['group_count']);
+      auctionCounts.set(row['city'], row['auction_count']);
       paintingsCounts.set(row['city'], row['paintings_count']);
+      artistCounts.set(row['city'], row['artist_count']);
+      malePercs.set(row['city'], row['male_percentage']);
+      femalePercs.set(row['city'], row['female_percentage']);
+      earliest_year.set(row['city'], row['earliest_year']);
+      latest_year.set(row['city'], row['latest_year']);
     }
     console.log('exhibitionCounts',exhibitionCounts);
+    console.log('artistCounts',artistCounts);
+    console.log('malePercentages',malePercs);
     
     attachTooltip(
       countries.selectAll("circle"),
       d => {
         const exhibitionCount = exhibitionCounts.get(d.city) || 0;
+        const soloCount = soloCounts.get(d.city) || 0;
+        const groupCount = groupCounts.get(d.city) || 0;
+        const auctionCount = auctionCounts.get(d.city) || 0;
         const paintingsCount = paintingsCounts.get(d.city) || 0;
+        const artistCount = artistCounts.get(d.city) || 0;
+        const malePerc = malePercs.get(d.city) || 0;
+        const femalePerc = femalePercs.get(d.city) || 0;
+        const earliest = earliest_year.get(d.city) || undefined;
+        const latest = latest_year.get(d.city) || undefined;
         return `<strong>City:</strong> ${d.city}<br>
-      <strong>Exhibitions:</strong> ${exhibitionCount}<br>
-      <strong>Paintings:</strong> ${paintingsCount}<br>`
+      <strong>Exhibitions:</strong> ${exhibitionCount} (<strong>Solo:</strong> ${soloCount} | <strong>Group:</strong> ${groupCount} | <strong>Auction:</strong> ${auctionCount})<br>
+      <strong>Paintings:</strong> ${paintingsCount}<br>
+      <strong>Artists:</strong> ${artistCount} (<strong>Male:</strong> ${malePerc}% | <strong>Female:</strong> ${femalePerc}%)<br>
+      <strong>Earliest:</strong> ${earliest} <strong>Latest:</strong> ${latest}<br>`
       }
     ); 
   }
@@ -221,10 +267,31 @@ export async function world_map() {
       auction,
       male,
       female);
-    const exhibitionCounts = new Map<string, number>();
+    
+      const countryNames = new Map<string, number>();
+      const exhibitionCounts = new Map<string, number>();
+      const soloCounts = new Map<string, number>();
+      const groupCounts = new Map<string, number>();
+      const auctionCounts = new Map<string, number>();
+      const paintingsCounts = new Map<string, number>();
+      const artistCounts = new Map<string, number>();
+      const malePercs = new Map<string, number>();
+      const femalePercs = new Map<string, number>();
+      const earliest_year = new Map<string, number>();
+      const latest_year = new Map<string, number>();
 
     for (const row of countriesWithExhibitions) {
+      countryNames.set(translate_iso_to_geojson(row['country']), row['country']);
       exhibitionCounts.set(translate_iso_to_geojson(row['country']), row['exhibition_count']);
+      soloCounts.set(translate_iso_to_geojson(row['country']), row['solo_count']);
+      groupCounts.set(translate_iso_to_geojson(row['country']), row['group_count']);
+      auctionCounts.set(translate_iso_to_geojson(row['country']), row['auction_count']);
+      paintingsCounts.set(translate_iso_to_geojson(row['country']), row['paintings_count']);
+      artistCounts.set(translate_iso_to_geojson(row['country']), row['artist_count']);
+      malePercs.set(translate_iso_to_geojson(row['country']), row['male_percentage']);
+      femalePercs.set(translate_iso_to_geojson(row['country']), row['female_percentage']);
+      earliest_year.set(translate_iso_to_geojson(row['country']), row['earliest_year']);
+      latest_year.set(translate_iso_to_geojson(row['country']), row['latest_year']);
     }
 
     const color_c = d3.scaleSequential(d3.interpolateBlues)
@@ -236,10 +303,8 @@ export async function world_map() {
         return color_c(Number(count));
       });
 
-      attachTooltip(
-        countries.selectAll("path"),
-        d => `<strong>Exhibitions:</strong> ${exhibitionCounts.get(d.id) || 0}`
-      );
+      updateCountryTooltips(countries, countryNames, exhibitionCounts, soloCounts, groupCounts,
+        auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
 
     // Update the legend
     svg.select("g.legend").remove();
@@ -317,4 +382,40 @@ function attachTooltip(
     .on("mouseout", () => {
       tooltip.style("visibility", "hidden");
     });
+}
+
+function updateCountryTooltips(countries: d3.Selection<d3.SVGElement, any, any, any>,
+  countryNames: Map<string, number>,
+  exhibitionCounts: Map<string, number>,
+  soloCounts: Map<string, number>,
+  groupCounts: Map<string, number>,
+  auctionCounts: Map<string, number>,
+  paintingsCounts: Map<string, number>,
+  artistCounts: Map<string, number>,
+  malePercs: Map<string, number>,
+  femalePercs: Map<string, number>,
+  earliest_year: Map<string, number>,
+  latest_year: Map<string, number>
+) {
+  attachTooltip(
+    countries.selectAll("path"),
+    d => {
+      const country = countryNames.get(d.id) || 0;
+      const exhibitionCount = exhibitionCounts.get(d.id) || 0;
+      const soloCount = soloCounts.get(d.id) || 0;
+      const groupCount = groupCounts.get(d.id) || 0;
+      const auctionCount = auctionCounts.get(d.id) || 0;
+      const paintingsCount = paintingsCounts.get(d.id) || 0;
+      const artistCount = artistCounts.get(d.id) || 0;
+      const malePerc = malePercs.get(d.id) || 0;
+      const femalePerc = femalePercs.get(d.id) || 0;
+      const earliest = earliest_year.get(d.id) || undefined;
+      const latest = latest_year.get(d.id) || undefined;
+      return `<strong>Country:</strong> ${country}<br>
+    <strong>Exhibitions:</strong> ${exhibitionCount} (<strong>Solo:</strong> ${soloCount} | <strong>Group:</strong> ${groupCount} | <strong>Auction:</strong> ${auctionCount})<br>
+    <strong>Paintings:</strong> ${paintingsCount}<br>
+    <strong>Artists:</strong> ${artistCount} (<strong>Male:</strong> ${malePerc}% | <strong>Female:</strong> ${femalePerc}%)<br>
+    <strong>Earliest:</strong> ${earliest} <strong>Latest:</strong> ${latest}<br>`
+    }
+  );
 }

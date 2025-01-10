@@ -270,7 +270,23 @@ export async function fetchCountriesWithExhibitions(
   console.log('fetchCountriesWithExhibitions',solo,group,auction)
   const conn = await db.connect();
   let query = `
-      SELECT "e.country" as country, COUNT(*) as exhibition_count
+      SELECT "e.country" as country, COUNT(*) as exhibition_count,
+      SUM("e.paintings") as paintings_count,
+      COUNT(DISTINCT CONCAT(COALESCE("a.firstname", ''), ' ', COALESCE("a.lastname", ''))
+      ) AS artist_count,
+      SUM(CASE WHEN "e.type" = 'solo' THEN 1 ELSE 0 END) AS solo_count,
+      SUM(CASE WHEN "e.type" = 'group' THEN 1 ELSE 0 END) AS group_count,
+      SUM(CASE WHEN "e.type" = 'auction' THEN 1 ELSE 0 END) AS auction_count,
+      ROUND(
+      100.0 * COUNT(CASE WHEN "a.gender" = 'M' THEN 1 ELSE NULL END) / 
+      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+      ) AS male_percentage,
+      ROUND(
+      100.0 * COUNT(CASE WHEN "a.gender" = 'F' THEN 1 ELSE NULL END) / 
+      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+      ) AS female_percentage,
+      MIN("e.startdate" % 10000) AS earliest_year,
+      MAX("e.startdate" % 10000) AS latest_year
       FROM artvis.parquet
       WHERE 1=1
   `;
@@ -319,7 +335,22 @@ export async function fetchExhibitionsByCityAndCountry(
   const conn = await db.connect();
   let query = `
       SELECT "e.country" as country, "e.city" as city, COUNT(*) as exhibition_count,
-      SUM("e.paintings") as paintings_count
+      SUM("e.paintings") as paintings_count,
+      COUNT(DISTINCT CONCAT(COALESCE("a.firstname", ''), ' ', COALESCE("a.lastname", ''))
+      ) AS artist_count,
+      SUM(CASE WHEN "e.type" = 'solo' THEN 1 ELSE 0 END) AS solo_count,
+      SUM(CASE WHEN "e.type" = 'group' THEN 1 ELSE 0 END) AS group_count,
+      SUM(CASE WHEN "e.type" = 'auction' THEN 1 ELSE 0 END) AS auction_count,
+      ROUND(
+      100.0 * COUNT(CASE WHEN "a.gender" = 'M' THEN 1 ELSE NULL END) / 
+      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+      ) AS male_percentage,
+      ROUND(
+      100.0 * COUNT(CASE WHEN "a.gender" = 'F' THEN 1 ELSE NULL END) / 
+      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+      ) AS female_percentage,
+      MIN("e.startdate" % 10000) AS earliest_year,
+      MAX("e.startdate" % 10000) AS latest_year
       FROM artvis.parquet
       WHERE 1=1
   `;
