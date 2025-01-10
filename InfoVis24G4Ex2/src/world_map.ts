@@ -74,12 +74,14 @@ export async function world_map() {
               const count = exhibitionCounts.get(d.id) || 0;
               return color_c(Number(count));
             })
-          .attr("stroke", "#fff");
-
+          .attr("stroke", "#fff")
       }
+
+      attachTooltip(
+        countries.selectAll("path"),
+        d => `<strong>Exhibitions:</strong> ${exhibitionCounts.get(d.id) || 0}`
+      );
   })
-
-
 
   svg.call(zoom);
 
@@ -197,6 +199,11 @@ export async function world_map() {
         return color_c(Number(count));
       });
 
+      attachTooltip(
+        countries.selectAll("path"),
+        d => `<strong>Exhibitions:</strong> ${exhibitionCounts.get(d.id) || 0}`
+      );
+
     // Update the legend
     svg.select("g.legend").remove();
     svg.append("g")
@@ -216,4 +223,60 @@ export async function world_map() {
     updateChoroplethMap
   };
 
+}
+
+/**
+ * Attaches tooltip behavior to a D3 selection.
+ * Enables displaying dynamic tooltips when a user hovers over elements in a D3 visualization.
+ *
+ * @param {d3.Selection<d3.BaseType, any, any, any>} selection - 
+ *        The D3 selection to which the tooltip behavior will be attached. 
+ *        This selection represents SVG elements (e.g., `path`, `circle`, `rect`) 
+ *        that respond to mouse events.
+ * 
+ * @param {function(any): string} onMouseOverHtml - 
+ *        A callback function that generates the HTML content for the tooltip.
+ *        Takes the data object (`d`) bound to the hovered element as input
+ *        and returns a string containing the tooltip's HTML.
+ * 
+ * Behavior:
+ * - Mouse Events:
+ *   - `mouseover`: 
+ *        Updates the tooltip content using the `onMouseOverHtml` function and makes it visible.
+ *   - `mousemove`: 
+ *        Dynamically positions the tooltip near the mouse cursor.
+ *   - `mouseout`: 
+ *        Hides the tooltip when the mouse leaves the element.
+ * - Tooltip Styling:
+ *   - Tooltip position is dynamically adjusted based on the mouse cursor's `pageX` and `pageY`.
+ *   - Tooltip visibility and content are managed through inline styles and HTML updates.
+ */
+function attachTooltip(
+  selection: d3.Selection<d3.BaseType, any, any, any>,
+  onMouseOverHtml: (d: any) => string
+) {
+  const tooltip = d3.select("body")
+  .append("div")
+  .style("position", "absolute")
+  .style("background", "white")
+  .style("border", "1px solid black")
+  .style("padding", "5px")
+  .style("border-radius", "5px")
+  .style("visibility", "hidden")
+  .style("pointer-events", "none");
+
+  selection
+    .on("mouseover", (event, d) => {
+      tooltip
+        .html(onMouseOverHtml(d))
+        .style("visibility", "visible");
+    })
+    .on("mousemove", (event) => {
+      tooltip
+        .style("top", `${event.pageY + 10}px`)
+        .style("left", `${event.pageX + 10}px`);
+    })
+    .on("mouseout", () => {
+      tooltip.style("visibility", "hidden");
+    });
 }
