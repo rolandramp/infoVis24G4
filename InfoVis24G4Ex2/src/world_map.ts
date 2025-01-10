@@ -261,7 +261,7 @@ export async function world_map() {
                                      auction: boolean = true,
                                      male: boolean = true,
                                      female: boolean = true) {
-    console.log('updateChoroplethMap',solo,group,auction)
+    console.log('updateChoroplethMap',exhibition_start_date, exhibition_end_date, solo,group,auction)
     const countriesWithExhibitions = await fetchCountriesWithExhibitions(exhibition_start_date,exhibition_end_date,solo,
       group,
       auction,

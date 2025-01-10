@@ -295,6 +295,10 @@ export async function fetchCountriesWithExhibitions(
     query += ` AND "e.startdate" >= ${start_date}`;
   }
 
+  if (end_date) {
+    query += ` AND "e.startdate" <= ${end_date}`;
+  }
+
   if (!solo || !group || !auction) {
     query += ` AND "e.type" IN (`;
     const types = [];
