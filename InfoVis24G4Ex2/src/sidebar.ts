@@ -110,7 +110,7 @@ begin_year_slider.on("input", function() {
   begin_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
-  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
 });
 
@@ -135,7 +135,7 @@ end_year_slider.on("input", function() {
   end_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
-  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
+  worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
 });
 
