@@ -205,6 +205,11 @@ const isoToGeoJsonMap: { [key: string]: string } = {
   "ZW": "ZWE"
 };
 
+/**
+ * Initializes the database by fetching the Parquet file and registering it with DuckDB.
+ *
+ * @returns {Promise<void>} - A promise that resolves when the database initialization is complete.
+ */
 export async function init_db():Promise<void> {
   const res = await fetch(parquet);
   console.log('res',res)
@@ -221,6 +226,12 @@ export async function fetchCoordinates(venue: string): Promise<Table<{ latitude:
   `);
 }
 
+/**
+ * Fetches the list of distinct cities from the database for a given country.
+ *
+ * @param {string} [country=''] - The ISO 3166-1 alpha-2 country code. If not provided, fetches cities for all countries.
+ * @returns {Promise<Table<{ city: Utf8 }>>} - A promise that resolves to a Table containing the distinct cities.
+ */
 export async function fetchCities(country: string = ''): Promise<Table<{ city: Utf8 }>> {
   const conn = await db.connect();
   return await conn.query(`
@@ -231,6 +242,11 @@ export async function fetchCities(country: string = ''): Promise<Table<{ city: U
   `);
 }
 
+/**
+ * Fetches the list of distinct countries from the database.
+ *
+ * @returns {Promise<Table<{ country: Utf8 }>>} - A promise that resolves to a Table containing the distinct countries.
+ */
 export async function fetchCountries(): Promise<Table<{ country: Utf8 }>> {
   const conn = await db.connect();
   return await conn.query(`
@@ -261,6 +277,10 @@ export async function fetchDataByCityAndCountry(city: string = 'Vienna', country
 export async function fetchCountriesWithExhibitions(
   start_date: bigint = 1902n,
   end_date: bigint = 1916n,
+  birthdateFrom: Date,
+  birthdateTo: Date,
+  deathdateFrom: Date,
+  deathdateTo: Date,
   solo: boolean = true,
   group: boolean = true,
   auction: boolean = true,
@@ -290,6 +310,14 @@ export async function fetchCountriesWithExhibitions(
       FROM artvis.parquet
       WHERE 1=1
   `;
+
+  if (birthdateFrom && birthdateTo) {
+    query += ` AND "a.birthdate" BETWEEN '${birthdateFrom.toISOString().split('T')[0]}' AND '${birthdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (deathdateFrom && deathdateTo) {
+    query += ` AND "a.deathdate" BETWEEN '${deathdateFrom.toISOString().split('T')[0]}' AND '${deathdateTo.toISOString().split('T')[0]}'`;
+  }
 
   if (start_date) {
     query += ` AND "e.startdate" >= ${start_date}`;
@@ -325,9 +353,14 @@ export async function fetchCountriesWithExhibitions(
   return await conn.query(query);
 }
 
+
 export async function fetchExhibitionsByCityAndCountry(
   start_date: bigint = 1902n,
   end_date: bigint = 1916n,
+  birthdateFrom: Date,
+  birthdateTo: Date,
+  deathdateFrom: Date,
+  deathdateTo: Date,
   solo: boolean = true,
   group: boolean = true,
   auction: boolean = true,
@@ -367,6 +400,14 @@ export async function fetchExhibitionsByCityAndCountry(
     query += ` AND "e.startdate" <= ${end_date}`;
   }
 
+  if (birthdateFrom && birthdateTo) {
+    query += ` AND "a.birthdate" BETWEEN '${birthdateFrom.toISOString().split('T')[0]}' AND '${birthdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (deathdateFrom && deathdateTo) {
+    query += ` AND "a.deathdate" BETWEEN '${deathdateFrom.toISOString().split('T')[0]}' AND '${deathdateTo.toISOString().split('T')[0]}'`;
+  }
+
   if (!solo || !group || !auction) {
     query += ` AND "e.type" IN (`;
     const types = [];
@@ -393,19 +434,83 @@ export async function fetchExhibitionsByCityAndCountry(
   return await conn.query(query);
 }
 
-
+/**
+ * Translates a given ISO 3166-1 alpha-2 country code to its corresponding GeoJSON country code.
+ *
+ * @param {string} iso - The ISO 3166-1 alpha-2 country code.
+ * @returns {string} - The corresponding GeoJSON country code.
+ */
 export function translate_iso_to_geojson(iso: string): string {
   return isoToGeoJsonMap[iso];
 }
 
-export async function describeArtvisTable(): Promise<void> {
+
+/**
+ * Extracts the date from the result of a database query and converts it to a Date object.
+ *
+ * @param {Table<any>} result - The result of a database query.
+ * @returns {Date | null} - A Date object representing the extracted date, or null if no date is found.
+ */
+function get_date_from_result(result: Table<any>) {
+  if (result) {
+    return new Date(result.getChild("result_date")!.toArray()[0]);
+  } else {
+    return null;
+  }
+}
+
+/**
+ * Fetches the minimum birthdate from the database.
+ *
+ * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the minimum birthdate, or null if no birthdate is found.
+ */
+export async function fetchMinimumBirthdate(): Promise<Date | null> {
   const conn = await db.connect();
   const result = await conn.query(`
-    SELECT * FROM artvis.parquet LIMIT 1
+    SELECT MIN("a.birthdate") as result_date
+    FROM artvis.parquet
   `);
+  return get_date_from_result(result);
+}
 
-  console.log("Description of artvis.parquet table:",result);
-  //result.forEach((row: any) => {
-  //  console.log(`Column: ${row.name}, Type: ${row.type}`);
-  //});
+/**
+ * Fetches the maximum birthdate from the database.
+ *
+ * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the maximum birthdate, or null if no birthdate is found.
+ */
+export async function fetchMaximumBirthdate(): Promise<Date | null> {
+  const conn = await db.connect();
+  const result = await conn.query(`
+    SELECT MAX("a.birthdate") as result_date
+    FROM artvis.parquet
+  `);
+  return get_date_from_result(result);
+}
+
+/**
+ * Fetches the minimum deathdate from the database.
+ *
+ * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the minimum deathdate, or null if no deathdate is found.
+ */
+export async function fetchMinimumDeathdate(): Promise<Date | null> {
+  const conn = await db.connect();
+  const result = await conn.query(`
+    SELECT MIN("a.deathdate") as result_date
+    FROM artvis.parquet
+  `);
+  return get_date_from_result(result);
+}
+
+/**
+ * Fetches the maximum deathdate from the database.
+ *
+ * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the maximum deathdate, or null if no deathdate is found.
+ */
+export async function fetchMaximumDeathdate(): Promise<Date | null> {
+  const conn = await db.connect();
+  const result = await conn.query(`
+    SELECT MAX("a.deathdate") as result_date
+    FROM artvis.parquet
+  `);
+  return get_date_from_result(result);
 }

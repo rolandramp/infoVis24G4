@@ -191,15 +191,26 @@ export async function world_map() {
   }
 
   async function updateCityTooltips(exhibition_start_date: bigint = 1902n,
-                                     exhibition_end_date: bigint = 1916n,
-                                     solo: boolean = true,
-                                     group: boolean = true,
-                                     auction: boolean = true,
-                                     male: boolean = true,
-                                     female: boolean = true
+                                    exhibition_end_date: bigint = 1916n,
+                                    birthdateFrom: Date,
+                                    birthdateTo: Date,
+                                    deathdateFrom: Date,
+                                    deathdateTo: Date,
+                                    solo: boolean = true,
+                                    group: boolean = true,
+                                    auction: boolean = true,
+                                    male: boolean = true,
+                                    female: boolean = true
   ) {
     console.log('updateCityTooltips',solo,group,auction)
-    const citiesWithExhibitions = await fetchExhibitionsByCityAndCountry(exhibition_start_date,exhibition_end_date,solo,
+    const citiesWithExhibitions = await fetchExhibitionsByCityAndCountry(
+      exhibition_start_date,
+      exhibition_end_date,
+      birthdateFrom,
+      birthdateTo,
+      deathdateFrom,
+      deathdateTo,
+      solo,
       group,
       auction,
       male,
@@ -256,13 +267,24 @@ export async function world_map() {
   // Function to update the choropleth map
   async function updateChoroplethMap(exhibition_start_date: bigint = 1902n,
                                      exhibition_end_date: bigint = 1916n,
+                                     birthdate_from: Date,
+                                     birthdate_to: Date,
+                                     deathdate_from: Date,
+                                     deathdate_to: Date,
                                      solo: boolean = true,
                                      group: boolean = true,
                                      auction: boolean = true,
                                      male: boolean = true,
                                      female: boolean = true) {
     console.log('updateChoroplethMap',exhibition_start_date, exhibition_end_date, solo,group,auction)
-    const countriesWithExhibitions = await fetchCountriesWithExhibitions(exhibition_start_date,exhibition_end_date,solo,
+    const countriesWithExhibitions = await fetchCountriesWithExhibitions(
+      exhibition_start_date,
+      exhibition_end_date,
+      birthdate_from,
+      birthdate_to,
+      deathdate_from,
+      deathdate_to,
+      solo,
       group,
       auction,
       male,
