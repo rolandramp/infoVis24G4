@@ -259,7 +259,7 @@ export async function fetchCountries(): Promise<Table<{ country: Utf8 }>> {
 export async function fetchDataByCityAndCountry(city: string = 'Vienna', country: string = 'AT'): Promise<Table<{ latitude: Utf8; longitude: Utf8 }>> {
   const conn = await db.connect();
   let query = `
-    SELECT DISTINCT "e.latitude", "e.longitude"
+      SELECT "e.latitude", "e.longitude", COUNT(*) as exhibition_count
     FROM artvis.parquet
     WHERE 1=1
   `;
@@ -269,6 +269,9 @@ export async function fetchDataByCityAndCountry(city: string = 'Vienna', country
   if (country) {
     query += ` AND "e.country" = '${country}'`;
   }
+  query += `
+    GROUP BY "e.latitude", "e.longitude"
+  `;
   const result = await conn.query(query);
   console.log('fetchDataByCityAndCountry ',result)
   return result;
@@ -513,4 +516,27 @@ export async function fetchMaximumDeathdate(): Promise<Date | null> {
     FROM artvis.parquet
   `);
   return get_date_from_result(result);
+}
+
+export async function fetchMaxPaintings(): Promise< number > {
+  const conn = await db.connect();
+  let query = `
+    SELECT "e.latitude", "e.longitude", sum("e.paintings") as paintings_count
+    FROM artvis.parquet e
+    WHERE 1=1
+  `;
+
+  query += `
+    GROUP BY "e.latitude", "e.longitude"
+  `;
+
+  const result = await conn.query(query);
+  const maxPaintingsCountQuery = `
+    SELECT MAX(paintings_count) as max_paintings_count
+    FROM (${query}) as subquery
+  `;
+  const maxPaintingsCountResult = await conn.query(maxPaintingsCountQuery);
+  const maxPaintingsCount = maxPaintingsCountResult.getChild("max_paintings_count")!.toArray()[0];
+
+  return maxPaintingsCount as number;
 }

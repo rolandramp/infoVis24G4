@@ -1,6 +1,6 @@
 import * as d3 from "d3"
 import {legendColor} from "d3-svg-legend"
-import { init_db, fetchDataByCityAndCountry, fetchCountriesWithExhibitions, translate_iso_to_geojson } from "./queries";
+import { init_db, fetchDataByCityAndCountry, fetchCountriesWithExhibitions, translate_iso_to_geojson, fetchMaxPaintings } from "./queries";
 import { fetchExhibitionsByCityAndCountry } from "./queries";
 interface GeoJson {
   type: string;
@@ -22,6 +22,14 @@ export async function world_map() {
 
   const width = 800;
   const height = 600;
+
+  // max number of paintings at location
+  const max_paintings = await fetchMaxPaintings()
+
+  // Create a scale for the circle radius based on the exhibition count
+  const radiusScale = d3.scaleSqrt()
+    .domain([0, Number(max_paintings) || 0])
+    .range([0.5, 7]); // Adjust the range as needed
 
   let svg = d3
     .create("svg")
@@ -144,8 +152,16 @@ export async function world_map() {
     g.attr("stroke-width", 1 / transform.k);
   }
 
-  function update(data: { latitude: number, longitude: number, city: String, country: String }[]) {
-    console.log(data);
+
+  /**
+   * Updates the map with new city coordinates.
+   *
+   * @param {Array<{ latitude: number, longitude: number, city: string, country: string }>} data -
+   *        An array of objects containing the latitude, longitude, city, and country information.
+   */
+  function update(data: { latitude: number, longitude: number, city: string, country: string, exhibition_count: number }[]) {
+
+
     const circles = countries.selectAll('circle')
       .data(data, d => `${d.latitude},${d.longitude}`);
 
@@ -155,15 +171,17 @@ export async function world_map() {
     // Update existing circles
     circles
       .attr('cx', d => projection([d.longitude, d.latitude])[0])
-      .attr('cy', d => projection([d.longitude, d.latitude])[1]);
+      .attr('cy', d => projection([d.longitude, d.latitude])[1])
 
     // Add new circles
     const newCircles = circles.enter()
       .append('circle')
       .attr('cx', d => projection([d.longitude, d.latitude])[0])
       .attr('cy', d => projection([d.longitude, d.latitude])[1])
-      .attr('r', 2)
-      .attr('fill', 'blue');
+      .attr('r', d => radiusScale(d.exhibition_count))
+      // .attr('r', 2)
+      .attr('fill', 'green')
+      .attr('opacity', 0.5);
   }
 
   // Function to update coordinates based on selected city and country
@@ -173,13 +191,15 @@ export async function world_map() {
       const data = await fetchDataByCityAndCountry(city, country);
       const latitudes = data.getChild("e.latitude")!.toJSON();
       const longitudes = data.getChild("e.longitude")!.toJSON();
+      const exhibition_count = data.getChild("exhibition_count")!.toJSON();
 
       // Map the latitude and longitude values into an array of objects
       const coordinates = latitudes.map((lat, index) => ({
         latitude: lat,
         longitude: longitudes[index],
         city: city,
-        country: country
+        country: country,
+        exhibition_count: exhibition_count
       }));
 
       // Update the world map with all the new coordinates
@@ -190,6 +210,23 @@ export async function world_map() {
     }
   }
 
+  /**
+   * Updates the city tooltips with exhibition data based on the provided filters.
+   *
+   * @param {bigint} exhibition_start_date - The start year for the exhibition filter.
+   * @param {bigint} exhibition_end_date - The end year for the exhibition filter.
+   * @param {Date} birthdate_from - The start date for the birthdate filter.
+   * @param {Date} birthdate_to - The end date for the birthdate filter.
+   * @param {Date} deathdate_from - The start date for the deathdate filter.
+   * @param {Date} deathdate_to - The end date for the deathdate filter.
+   * @param {boolean} solo - Filter for solo exhibitions.
+   * @param {boolean} group - Filter for group exhibitions.
+   * @param {boolean} auction - Filter for auction exhibitions.
+   * @param {boolean} male - Filter for male artists.
+   * @param {boolean} female - Filter for female artists.
+   *
+   * @returns {Promise<void>} - A promise that resolves when the city tooltips update is complete.
+   */
   async function updateCityTooltips(exhibition_start_date: bigint = 1902n,
                                     exhibition_end_date: bigint = 1916n,
                                     birthdateFrom: Date,
@@ -264,7 +301,23 @@ export async function world_map() {
     ); 
   }
 
-  // Function to update the choropleth map
+  /**
+   * Updates the choropleth map with exhibition data based on the provided filters.
+   *
+   * @param {bigint} exhibition_start_date - The start year for the exhibition filter.
+   * @param {bigint} exhibition_end_date - The end year for the exhibition filter.
+   * @param {Date} birthdate_from - The start date for the birthdate filter.
+   * @param {Date} birthdate_to - The end date for the birthdate filter.
+   * @param {Date} deathdate_from - The start date for the deathdate filter.
+   * @param {Date} deathdate_to - The end date for the deathdate filter.
+   * @param {boolean} solo - Filter for solo exhibitions.
+   * @param {boolean} group - Filter for group exhibitions.
+   * @param {boolean} auction - Filter for auction exhibitions.
+   * @param {boolean} male - Filter for male artists.
+   * @param {boolean} female - Filter for female artists.
+   *
+   * @returns {Promise<void>} - A promise that resolves when the choropleth map update is complete.
+   */
   async function updateChoroplethMap(exhibition_start_date: bigint = 1902n,
                                      exhibition_end_date: bigint = 1916n,
                                      birthdate_from: Date,
