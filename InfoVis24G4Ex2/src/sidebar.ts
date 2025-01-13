@@ -19,8 +19,11 @@ await init_db();
 
 // Create the world map and append it to the app
 const worldMap = await world_map();
-//const graphMap = await grahp_map();
-app.appendChild((await worldMap).element);
+console.log("WORLD MAP ",worldMap);
+
+const graphMap =  await grahp_map();
+console.log("GRAPH MAP ",graphMap);
+app.appendChild(worldMap.element);
 
 let showMapView = true;
 let showGraphView = false;
@@ -44,8 +47,9 @@ const showGraphButton = d3.select("#buttonContainerId").append("button").attr("i
     }
     showGraphButton.style("background-color", showGraphView ? "white" : "lightgrey");
     showMapButton.style("background-color", showMapView ? "white" : "lightgrey");
+    d3.select<HTMLHeadingElement, unknown>('#viewTitle').text('Graph View');
     app.removeChild(worldMap.element);
-//      app.appendChild(graphMap.element);
+    app.appendChild(graphMap.element);
   });
 
 const showMapButton = d3.select("#buttonContainerId").append("button").attr("id", "mapViewButtonId")
@@ -67,8 +71,9 @@ const showMapButton = d3.select("#buttonContainerId").append("button").attr("id"
     }
     showMapButton.style("background-color", showMapView ? "white" : "lightgrey");
     showGraphButton.style("background-color", showGraphView ? "white" : "lightgrey");
+    d3.select<HTMLHeadingElement, unknown>('#viewTitle').text('World Map View');
     app.appendChild(worldMap.element);
-//      app.removeChild(graphMap.element);
+    app.removeChild(graphMap.element);
   });
 
 let solo_bool: boolean = true;

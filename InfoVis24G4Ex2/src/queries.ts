@@ -540,3 +540,32 @@ export async function fetchMaxPaintings(): Promise< number > {
 
   return maxPaintingsCount as number;
 }
+
+export async function fetchBasicExhbitionInfos(): Promise<Table<{ id: Utf8; title: Utf8; type: Utf8 }>> {
+  const conn = await db.connect();
+  let query = (`
+    SELECT DISTINCT "e.id", "e.title", "e.type"
+    FROM artvis.parquet
+    WHERE 1 = 1
+  `);
+  return await conn.query(query);
+}
+
+
+export async function fetchBasicArtistInfos(): Promise<Table<{ id: Utf8; firstname: Utf8; lastname: Utf8; gender: Utf8 }>> {
+  const conn = await db.connect();
+  return await conn.query(`
+    SELECT DISTINCT "a.id", "a.firstname","a.lastname","a.gender"
+    FROM artvis.parquet
+    WHERE 1=1
+  `);
+}
+
+export async function fetchArtistExhibitionLink(): Promise<Table<{ aid: Utf8; eid: Utf8 }>> {
+  const conn = await db.connect();
+  return await conn.query(`
+    SELECT DISTINCT "a.id", "e.id"
+    FROM artvis.parquet
+    WHERE 1=1
+  `);
+}
