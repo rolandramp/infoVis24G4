@@ -452,22 +452,22 @@ export function translate_iso_to_geojson(iso: string): string {
  * Extracts the date from the result of a database query and converts it to a Date object.
  *
  * @param {Table<any>} result - The result of a database query.
- * @returns {Date | null} - A Date object representing the extracted date, or null if no date is found.
+ * @returns {Date} - A Date object representing the extracted date.
  */
 function get_date_from_result(result: Table<any>) {
   if (result) {
     return new Date(result.getChild("result_date")!.toArray()[0]);
   } else {
-    return null;
+    return new Date();
   }
 }
 
 /**
  * Fetches the minimum birthdate from the database.
  *
- * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the minimum birthdate, or null if no birthdate is found.
+ * @returns {Promise<Date>} - A promise that resolves to a Date object representing the minimum birthdate.
  */
-export async function fetchMinimumBirthdate(): Promise<Date | null> {
+export async function fetchMinimumBirthdate(): Promise<Date> {
   const conn = await db.connect();
   const result = await conn.query(`
     SELECT MIN("a.birthdate") as result_date
@@ -479,9 +479,9 @@ export async function fetchMinimumBirthdate(): Promise<Date | null> {
 /**
  * Fetches the maximum birthdate from the database.
  *
- * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the maximum birthdate, or null if no birthdate is found.
+ * @returns {Promise<Date>} - A promise that resolves to a Date object representing the maximum birthdate.
  */
-export async function fetchMaximumBirthdate(): Promise<Date | null> {
+export async function fetchMaximumBirthdate(): Promise<Date> {
   const conn = await db.connect();
   const result = await conn.query(`
     SELECT MAX("a.birthdate") as result_date
@@ -493,9 +493,9 @@ export async function fetchMaximumBirthdate(): Promise<Date | null> {
 /**
  * Fetches the minimum deathdate from the database.
  *
- * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the minimum deathdate, or null if no deathdate is found.
+ * @returns {Promise<Date>} - A promise that resolves to a Date object representing the minimum deathdate.
  */
-export async function fetchMinimumDeathdate(): Promise<Date | null> {
+export async function fetchMinimumDeathdate(): Promise<Date> {
   const conn = await db.connect();
   const result = await conn.query(`
     SELECT MIN("a.deathdate") as result_date
@@ -507,9 +507,9 @@ export async function fetchMinimumDeathdate(): Promise<Date | null> {
 /**
  * Fetches the maximum deathdate from the database.
  *
- * @returns {Promise<Date | null>} - A promise that resolves to a Date object representing the maximum deathdate, or null if no deathdate is found.
+ * @returns {Promise<Date>} - A promise that resolves to a Date object representing the maximum deathdate.
  */
-export async function fetchMaximumDeathdate(): Promise<Date | null> {
+export async function fetchMaximumDeathdate(): Promise<Date> {
   const conn = await db.connect();
   const result = await conn.query(`
     SELECT MAX("a.deathdate") as result_date

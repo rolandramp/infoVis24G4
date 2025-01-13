@@ -1,5 +1,5 @@
 import * as d3 from "d3"
-import {legendColor} from "d3-svg-legend"
+import {  legendColor, legendSize} from "d3-svg-legend"
 import { init_db, fetchDataByCityAndCountry, fetchCountriesWithExhibitions, translate_iso_to_geojson, fetchMaxPaintings } from "./queries";
 import { fetchExhibitionsByCityAndCountry } from "./queries";
 interface GeoJson {
@@ -30,6 +30,15 @@ export async function world_map() {
   const radiusScale = d3.scaleSqrt()
     .domain([0, Number(max_paintings) || 0])
     .range([0.5, 7]); // Adjust the range as needed
+
+  // Append the legend for the radius scale
+  const radiusLegend = legendSize()
+    .scale(radiusScale)
+    .shape('circle')
+    .shapePadding(15)
+    .labelOffset(10)
+    .orient('vertical')
+    .title('Paintings Count');
 
   let svg = d3
     .create("svg")
@@ -109,6 +118,11 @@ export async function world_map() {
          auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
   })
 
+  svg.append('g')
+    .attr('class', 'legendSize')
+    .attr('transform', `translate(40, ${height-80})`)
+    .call(radiusLegend);
+
   svg.call(zoom);
 
   // Append the legend
@@ -116,11 +130,13 @@ export async function world_map() {
     .scale(color_c)
     .shapeWidth(200)
     .orient("horizontal")
-    .labelFormat(d3.format(".0f"));
+    .labelFormat(d3.format(".0f"))
+    .title('Exhibitions Count');
 
   svg.append("g")
     .attr("transform", "translate(10,20)")
     .call(legend);
+
 
   function reset() {
     countries.transition().style("fill", null);
