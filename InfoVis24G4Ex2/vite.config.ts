@@ -6,6 +6,6 @@ export default {
   base: "/InfoVis24G4Ex2/",
   server: {
     host: true,
-    port: 8080,
+    port: 3500,
   }
 };

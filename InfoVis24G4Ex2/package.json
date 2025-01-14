@@ -2,7 +2,7 @@
   "name": "infovis24g4ex2",
   "private": true,
   "version": "1.0.0",
-  "description": "Create docker image with node.js already installed",
+  "description": "Visualization for art historians",
   "scripts": {
     "start": "vite"
   },
