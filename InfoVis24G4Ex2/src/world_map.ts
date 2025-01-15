@@ -181,6 +181,9 @@ export async function world_map() {
     const circles = countries.selectAll('circle')
       .data(data, d => `${d.latitude},${d.longitude}`);
 
+    console.log("update",circles)
+
+
     // Remove old circles
     circles.exit().remove();
 
@@ -201,24 +204,27 @@ export async function world_map() {
   }
 
   // Function to update coordinates based on selected city and country
-  async function update_coordinates(city: string = 'Vienna', country: string = 'AT') {
+  async function update_coordinates(city: string = 'All', country: string = 'All') {
     try {
       // Fetch data by city and country
       const data = await fetchDataByCityAndCountry(city, country);
       const latitudes = data.getChild("e.latitude")!.toJSON();
       const longitudes = data.getChild("e.longitude")!.toJSON();
       const exhibition_count = data.getChild("exhibition_count")!.toJSON();
+      const city_r = data.getChild("e.city")!.toJSON();
+      const country_r = data.getChild("e.country")!.toJSON();
 
       // Map the latitude and longitude values into an array of objects
       const coordinates = latitudes.map((lat, index) => ({
         latitude: lat,
         longitude: longitudes[index],
-        city: city,
-        country: country,
-        exhibition_count: exhibition_count
+        city: city_r[index],
+        country: country_r[index],
+        exhibition_count: Number(exhibition_count[index])
       }));
 
       // Update the world map with all the new coordinates
+      console.log('update_coordinates',coordinates)
       update(coordinates);
     } catch (error) {
       // Handle any errors that occur during the fetch or update process
@@ -411,7 +417,6 @@ export async function world_map() {
 
   return {
     element: svg.node()!,
-    update,
     update_coordinates,
     updateChoroplethMap,
     updateCityTooltips

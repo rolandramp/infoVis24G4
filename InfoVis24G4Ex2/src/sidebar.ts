@@ -411,6 +411,9 @@ const country_select_box = d3.select(sidebar).append("select")
 
 // Fetch and add options to the country select box
 const countries = await fetchCountries();
+country_select_box.append("option")
+  .attr("value", "All")
+  .text("All");
 for (const country of countries) {
   country_select_box.append("option")
     .attr("value", country["e.country"])
@@ -424,15 +427,19 @@ country_select_box.on("change", async function() {
   // Fetch and update the city options based on the selected country
   const cities = await fetchCities(country);
   city_select_box.selectAll("option").remove();
+  city_select_box.append("option")
+    .attr("value", "All")
+    .text("All");
   for (const city of cities) {
     city_select_box.append("option")
       .attr("value", city["e.city"])
       .text(city["e.city"]);
   }
-
   const city = city_select_box.property("value");
   // Update coordinates based on the new selection
-  updateCityCircles(city, country, exibition_start_year);
+  await updateCityCircles(city, country,exibition_start_year, exibition_end_year,
+    birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
+    solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Selected value:", country);
 });
 
@@ -449,7 +456,7 @@ const city_select_box = d3.select(sidebar).append("select")
   .attr("id", "city_select_box_id");
 
 // Fetch and add options to the city select box
-let cities = await fetchCities("AT");
+let cities = await fetchCities("All");
 for (const city of cities) {
   city_select_box.append("option")
     .attr("value", city["e.city"])
@@ -457,10 +464,10 @@ for (const city of cities) {
 }
 
 // Add an event listener to the city select box
-city_select_box.on("change", function() {
+city_select_box.on("change", async function() {
   const city = city_select_box.property("value");
   const country = country_select_box.property("value");
-  updateCityCircles(city, country, exibition_start_year, exibition_end_year,
+  await updateCityCircles(city, country, exibition_start_year, exibition_end_year,
     birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
     solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Selected city:", city);
@@ -474,7 +481,7 @@ async function updateCityCircles(city, country, exibition_start_year, exibition_
     await worldMap.update_coordinates(city, country);
 
     // Update tooltips after coordinates have been updated
-    worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
+    await worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   } catch (error) {
     console.error("Error updating the world map:", error);
