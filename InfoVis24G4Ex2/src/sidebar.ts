@@ -110,8 +110,12 @@ const begin_year_silderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 begin_year_slider.on("input", function() {
-  const value = d3.select(this).property("value");
-  exibition_start_year = value;
+  let value = parseInt(d3.select(this).property("value"));
+  if (value > parseInt(end_year_slider.property("value"))) {
+    value = parseInt(end_year_slider.property("value"));
+    d3.select(this).property("value", value);
+  }
+  exibition_start_year = BigInt(value);
   begin_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
@@ -135,8 +139,12 @@ const end_year_silderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the end_year_slider value changes
 end_year_slider.on("input", function() {
-  const value: bigint = d3.select(this).property("value");
-  exibition_end_year = value;
+  let value = parseInt(d3.select(this).property("value"));
+  if (value < parseInt(begin_year_slider.property("value"))) {
+    value = parseInt(begin_year_slider.property("value"));
+    d3.select(this).property("value", value);
+  }
+  exibition_end_year = BigInt(value);
   end_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
@@ -161,15 +169,19 @@ const birthdateFromSlider = d3.select(sidebar).append("input")
   .style("width", "100%");
 
 // Create a span to display the begin_year_slider value
-const birthdateFromSilderValue = d3.select(sidebar).append("span")
+const birthdateFromSliderValue = d3.select(sidebar).append("span")
   .style("margin-left", "10px")
   .text(new Date(parseInt(birthdateFromSlider.property("value"))).toISOString().split('T')[0]);
 
 // Update the span text when the begin_year_slider value changes
 birthdateFromSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value > birthdateTo) {
+    value = birthdateTo;
+    d3.select(this).property("value", birthdateTo.getTime());
+  }
   birthdateFrom = value;
-  birthdateFromSilderValue.text(value.toISOString().split('T')[0]);
+  birthdateFromSliderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
     deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -193,7 +205,11 @@ const birthdateToSilderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 birthdateToSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value < birthdateFrom) {
+    value = birthdateFrom;
+    d3.select(this).property("value", birthdateFrom.getTime());
+  }
   birthdateTo = value;
   birthdateToSilderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -225,7 +241,11 @@ const deathdateFromSliderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 deathdateFromSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value > deathdateTo) {
+    value = deathdateTo;
+    d3.select(this).property("value", deathdateTo.getTime());
+  }
   deathdateFrom = value;
   deathdateFromSliderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -251,7 +271,11 @@ const deathdateToSilderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 deathdateToSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value < deathdateFrom) {
+    value = deathdateFrom;
+    d3.select(this).property("value", deathdateFrom.getTime());
+  }
   deathdateTo = value;
   deathdateToSilderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
