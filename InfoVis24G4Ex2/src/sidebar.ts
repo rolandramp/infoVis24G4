@@ -7,7 +7,8 @@ import {
   fetchMinimumBirthdate,
   fetchMaximumBirthdate,
   fetchMinimumDeathdate,
-  fetchMaximumDeathdate
+  fetchMaximumDeathdate,
+  fetchBasicArtistInfos
 } from "./queries";
 import { world_map } from "./world_map";
 import { artistExhibitionGraph } from './graph.js';
@@ -185,6 +186,7 @@ birthdateFromSlider.on("input", function() {
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
+  updateArtistDatalist();
 });
 
 
@@ -211,6 +213,7 @@ birthdateToSlider.on("input", function() {
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
+  updateArtistDatalist();
 });
 
 // Deathdate slider begin
@@ -243,6 +246,7 @@ deathdateFromSlider.on("input", function() {
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
+  updateArtistDatalist();
 });
 
 
@@ -269,6 +273,7 @@ deathdateToSlider.on("input", function() {
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
+  updateArtistDatalist();
 });
 
 d3.select(sidebar).append("h4").text("Eventtype").style("margin-bottom", "5px");
@@ -317,6 +322,7 @@ solo_checkbox.on("change", function() {
   graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Checkbox Solo is checked:", isChecked);
+  updateArtistDatalist();
 });
 
 group_checkbox.on("change", function() {
@@ -329,6 +335,7 @@ group_checkbox.on("change", function() {
   graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Checkbox Group is checked:", isChecked);
+  updateArtistDatalist();
 });
 
 auction_checkbox.on("change", function() {
@@ -341,6 +348,7 @@ auction_checkbox.on("change", function() {
   graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Checkbox Aution is checked:", isChecked);
+  updateArtistDatalist();
 });
 
 d3.select(sidebar).append("h4").text("Gender").style("margin-bottom", "5px");
@@ -379,6 +387,7 @@ male_checkbox.on("change", function() {
   graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Male checkbox is checked:", isChecked);
+  updateArtistDatalist();
 });
 
 female_checkbox.on("change", function() {
@@ -391,6 +400,7 @@ female_checkbox.on("change", function() {
   graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Female checkbox is checked:", isChecked);
+  updateArtistDatalist();
 });
 
 d3.select(sidebar).append("h4").text("Event location").style("margin-bottom", "5px");
@@ -482,11 +492,66 @@ function toggleSidebarElementsForGraphView(isGraphView: boolean) {
 
   // Disable all sidebar elements when in graph view
   // or reactive them when not
-  var disableValue = isGraphView ? true : null;
+  var onlyGraph = isGraphView ? true : null;
   
-  begin_year_slider.attr("disabled", disableValue);
-  end_year_slider.attr("disabled", disableValue);
-  city_select_box.attr("disabled", disableValue);
-  country_select_box.attr("disabled", disableValue);
-} 
+  begin_year_slider.attr("disabled", onlyGraph);
+  end_year_slider.attr("disabled", onlyGraph);
+  city_select_box.attr("disabled", onlyGraph);
+  country_select_box.attr("disabled", onlyGraph);
+
+  //Assumption that only map view and graph view are possible
+  var onlyMap = isGraphView ? null : true;
+  artistInput.attr("disabled", onlyMap);
+}
+
+// Append an input field for artist search
+d3.select(sidebar).append("h4").text("Select Artist").style("margin-bottom", "5px");
+
+// Create input field with a datalist
+const artistInput = d3.select(sidebar)
+  .append("input")
+  .attr("type", "text")
+  .attr("id", "artistInput")
+  .attr("list", "artistList")
+  .attr("placeholder", "Search artist...");
+
+// Create datalist element
+const artistDatalist = d3.select(sidebar)
+  .append("datalist")
+  .attr("id", "artistList");
+
+// Fetch and populate the datalist, with the filtered artists
+async function updateArtistDatalist() {
+  const artists = await fetchBasicArtistInfos(birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
+    solo_bool, group_bool, auction_bool, male_bool, female_bool
+  );
+  
+  // Remove existing options to avoid duplicates
+  artistDatalist.selectAll("option").remove();
+
+  for (const artist of artists) {
+    artistDatalist.append("option")
+      .attr("value", `${artist["a.firstname"]} ${artist["a.lastname"]}`)
+      .attr("data-id", artist["a.id"]); // Store artist ID if needed
+  }
+
+  console.log("Artists loaded into datalist.");
+}
+
+// Call the function to initialize the datalist
+updateArtistDatalist();
+//Initially only the map view is shown
+//so we deactivate some sidebar elements
+toggleSidebarElementsForGraphView(false);
+
+// Handle Selection changes
+artistInput.on("change", function () {
+  const selectedArtist = d3.select(this).property("value");
+  console.log("Selected artist:", selectedArtist);
+
+  // You can process the selected artist here (e.g., filtering visualizations)
+});
+
+
+
 
