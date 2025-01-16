@@ -4,8 +4,7 @@ import {
   init_db,
   fetchDataByCityAndCountry,
   fetchCountriesWithExhibitions,
-  translate_iso_to_geojson,
-  fetchMaxPaintings
+  translate_iso_to_geojson
 } from "./queries";
 import { fetchExhibitionsByCityAndCountry } from "./queries";
 
@@ -30,22 +29,7 @@ export async function world_map() {
   const width = 800;
   const height = 600;
 
-  // max number of paintings at location
-  const max_paintings = await fetchMaxPaintings();
 
-  // Create a scale for the circle radius based on the exhibition count
-  const radiusScale = d3.scaleSqrt()
-    .domain([0, Number(max_paintings) || 0])
-    .range([0.5, 7]); // Adjust the range as needed
-
-  // Append the legend for the radius scale
-  const radiusLegend = legendSize()
-    .scale(radiusScale)
-    .shape("circle")
-    .shapePadding(15)
-    .labelOffset(10)
-    .orient("vertical")
-    .title("Paintings Count");
 
   let svg = d3
     .create("svg")
@@ -97,8 +81,21 @@ export async function world_map() {
     latest_year.set(translate_iso_to_geojson(row["country"]), row["latest_year"]);
   }
 
+  // Create a scale for the circle radius based on the exhibition count
+  let radiusScale = d3.scaleSqrt()
+    .domain([0, d3.max(Array.from(paintingsCounts.values()).map(v => Number(v)))  || 0])
+    .range([1, 6]); // Adjust the range as needed
 
-  console.log("exhibitionCounts", Array.from(exhibitionCounts.values()));
+  // Append the legend for the radius scale
+  const radiusLegend = legendSize()
+    .scale(radiusScale)
+    .shape("circle")
+    .shapePadding(15)
+    .labelOffset(10)
+    .orient("vertical")
+    .title("Paintings Count");
+
+
   console.log("array Max", d3.max(Array.from(exhibitionCounts.values())));
 
   // Create a color scale
@@ -124,11 +121,6 @@ export async function world_map() {
         auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
     });
 
-  svg.append("g")
-    .attr("class", "legendSize")
-    .attr("transform", `translate(40, ${height - 80})`)
-    .call(radiusLegend);
-
   svg.call(zoom);
 
   // Append the legend
@@ -143,6 +135,10 @@ export async function world_map() {
     .attr("transform", "translate(10,20)")
     .call(legend);
 
+  svg.append("g")
+    .attr("class", "legendSize")
+    .attr("transform", `translate(40, ${height - 80})`)
+    .call(radiusLegend);
 
   function reset() {
     countries.transition().style("fill", null);
@@ -178,7 +174,7 @@ export async function world_map() {
     const circles = countries.selectAll("circle")
       .data(data, d => `${d.latitude},${d.longitude}`);
 
-    console.log("update", circles);
+    console.log("update data", data);
 
 
     // Remove old circles
@@ -187,7 +183,8 @@ export async function world_map() {
     // Update existing circles
     circles
       .attr("cx", d => projection([d.longitude, d.latitude])[0])
-      .attr("cy", d => projection([d.longitude, d.latitude])[1]);
+      .attr("cy", d => projection([d.longitude, d.latitude])[1])
+      .attr("r", d => radiusScale(d.paintings_count));
 
     // Add new circles
     circles.enter()
@@ -220,9 +217,14 @@ export async function world_map() {
         country, start_date, end_date, birthdateFrom, birthdateTo, deathdateFrom, deathdateTo, solo, group, auction, male, female);
       const latitudes = data.getChild("e.latitude")!.toJSON();
       const longitudes = data.getChild("e.longitude")!.toJSON();
-      const paintings_count = data.getChild("paintings_count")!.toJSON();
       const city_r = data.getChild("e.city")!.toJSON();
       const country_r = data.getChild("e.country")!.toJSON();
+
+      const paintings_count_list: number[] = []
+
+      for (const row of data) {
+          paintings_count_list.push(row["paintings_count"][0])
+      }
 
       // Map the latitude and longitude values into an array of objects
       const coordinates = latitudes.map((lat, index) => ({
@@ -230,7 +232,7 @@ export async function world_map() {
         longitude: longitudes[index],
         city: city_r[index],
         country: country_r[index],
-        paintings_count: Number(paintings_count[index])
+        paintings_count: Number(paintings_count_list[index])
       }));
 
       // Update the world map with all the new coordinates
@@ -400,6 +402,12 @@ export async function world_map() {
       latest_year.set(translate_iso_to_geojson(row["country"]), row["latest_year"]);
     }
 
+
+    // Create a scale for the circle radius based on the exhibition count
+    radiusScale = d3.scaleSqrt()
+      .domain([0, d3.max(Array.from(paintingsCounts.values()).map(v => Number(v)))  || 0])
+      .range([1, 6]); // Adjust the range as needed
+
     const color_c = d3.scaleSequential(d3.interpolateBlues)
       .domain([0, d3.max(Array.from(exhibitionCounts.values()).map(v => Number(v))) || 0]);
 
@@ -422,6 +430,19 @@ export async function world_map() {
         .shapeWidth(200)
         .orient("horizontal")
         .labelFormat(d3.format(".0f")));
+
+    // Update the radius legend
+    svg.select("g.legendSize").remove();
+    svg.append("g")
+      .attr("class", "legendSize")
+      .attr("transform", `translate(40, ${height - 80})`)
+      .call(legendSize()
+        .scale(radiusScale)
+        .shape("circle")
+        .shapePadding(15)
+        .labelOffset(10)
+        .orient("vertical")
+        .title("Paintings Count"));
   }
 
   return {

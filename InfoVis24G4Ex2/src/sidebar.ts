@@ -448,12 +448,11 @@ country_select_box.on("change", async function() {
       .attr("value", city["e.city"])
       .text(city["e.city"]);
   }
-  const city = city_select_box.property("value");
+  // const city = city_select_box.property("value");
   // Update coordinates based on the new selection
   await updateCityCircles(city, country, exibition_start_year, exibition_end_year,
     birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
     solo_bool, group_bool, auction_bool, male_bool, female_bool);
-  console.log("Selected value:", country);
 });
 
 d3.select(sidebar).append("br");
@@ -479,11 +478,9 @@ for (const city of cities) {
 // Add an event listener to the city select box
 city_select_box.on("change", async function() {
   city = city_select_box.property("value");
-  country = country_select_box.property("value");
   await updateCityCircles(city, country, exibition_start_year, exibition_end_year,
     birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
     solo_bool, group_bool, auction_bool, male_bool, female_bool);
-  console.log("Selected city:", city);
 });
 
 async function updateCityCircles(city: string = "All",
