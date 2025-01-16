@@ -50,6 +50,9 @@ const showGraphButton = d3.select("#buttonContainerId").append("button").attr("i
     d3.select<HTMLHeadingElement, unknown>('#viewTitle').text('Graph View');
     app.removeChild(worldMap.element);
     app.appendChild(graphMap.element);
+
+    // Deactive some sidebar elements on the graph view
+    toggleSidebarElementsForGraphView(true);
   });
 
 const showMapButton = d3.select("#buttonContainerId").append("button").attr("id", "mapViewButtonId")
@@ -74,6 +77,9 @@ const showMapButton = d3.select("#buttonContainerId").append("button").attr("id"
     d3.select<HTMLHeadingElement, unknown>('#viewTitle').text('World Map View');
     app.appendChild(worldMap.element);
     app.removeChild(graphMap.element);
+
+    // Reactivate some sidebar elements on the graph view
+    toggleSidebarElementsForGraphView(false);
   });
 
 let solo_bool: boolean = true;
@@ -487,4 +493,16 @@ async function updateCityCircles(city, country, exibition_start_year, exibition_
     console.error("Error updating the world map:", error);
   }
 }
+
+function toggleSidebarElementsForGraphView(isGraphView: boolean) {
+
+  // Disable all sidebar elements when in graph view
+  // or reactive them when not
+  var disableValue = isGraphView ? true : null;
+  
+  begin_year_slider.attr("disabled", disableValue);
+  end_year_slider.attr("disabled", disableValue);
+  city_select_box.attr("disabled", disableValue);
+  country_select_box.attr("disabled", disableValue);
+} 
 
