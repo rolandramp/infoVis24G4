@@ -96,18 +96,6 @@ export async function artistExhibitionGraph() {
             });
         }
 
-        // // generate links
-        // for (let i = 0; i < m; i++) {
-        //     let a = 0;
-        //     let b = 0;
-        //     while (a == b) {
-        //         a = Math.floor(Math.random() * n);
-        //         b = Math.floor(Math.random() * n);
-        //     }
-        //     newLinks.push({source: a, target: b})
-        //     if (i < newNodes.length - 2) newLinks.push({source: i, target: i + 1})
-        // }
-
         console.log("New Nodes ", newNodes, "New Links ", newLinks);
         return {nodes: newNodes, links: newLinks}
     }
@@ -140,22 +128,6 @@ export async function artistExhibitionGraph() {
     const nodeG = svg.append("g").attr("class", "nodes")
     const linkG = svg.append("g").attr("class", "links")
 
-    // if (graph === undefined){
-    //
-    // } else {
-    //     graph = randomizeData(graph,
-    //         birthdate_from,
-    //         birthdate_to,
-    //         deathdate_from,
-    //         deathdate_to,
-    //         solo,
-    //         group,
-    //         auction,
-    //         male,
-    //         female);
-    // }
-    // update();
-
 // Two variables to hold our links and nodes - declared outside the update function so that the tick function can access them.
     var links;
     var nodes;
@@ -163,28 +135,16 @@ export async function artistExhibitionGraph() {
 // Update based on data:
     function update() {
 
-        // Select all nodes and bind data:
-        nodes = nodeG.selectAll("g")
-            .data(graph.nodes);
+        nodes = nodeG.selectAll("g").data(graph.nodes, d => d.id); // Bind based on unique ID
+        nodes.exit().remove(); // Remove old
 
-        // Remove excess nodes:
-        nodes.exit()
-            .transition()
-            .attr("opacity", 0)
-            .remove();
-
-        // Enter new nodes:
-        var newnodes = nodes.enter().append("g")
-            .attr("opacity", 0)
+        let newnodes = nodes
+            .enter()
+            .append("g")
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
-                .on("end", dragended))
-
-        // for effect:
-        newnodes.transition()
-            .attr("opacity", 1)
-            .attr("class", "nodes")
+                .on("end", dragended));
 
         newnodes.append("circle")
             .attr("r", function (d) {
@@ -200,51 +160,20 @@ export async function artistExhibitionGraph() {
             })
             .attr('x', 6)
             .attr('y', 3)
-            .style("font-size", "20px");
+            .style("font-size", "15px");
 
-        newnodes.append("title")
-            .text(function (d) {
-                return d.name;
-            });
+        nodes = newnodes.merge(nodes); // Combine old + new
 
-        // Combine new nodes with old nodes:
-        nodes = newnodes.merge(nodes);
+        links = linkG.selectAll("line").data(graph.links, d => `${d.source}-${d.target}`); // Unique ID for links
+        links.exit().remove(); // Remove old
+        let newlinks = links.enter().append("line"); // Add visuals for links
+        links = newlinks.merge(links); // Combine old + new
 
-        // Repeat but with links:
-        links = linkG.selectAll("line")
-            .data(graph.links)
+        // Restart the simulation with new data
+        simulation.nodes(graph.nodes).on("tick", ticked);
+        simulation.force("link").links(graph.links);
 
-        // Remove excess links:
-        links.exit()
-            .transition()
-            .attr("opacity", 0)
-            .remove();
-
-        // Add new links:
-        var newlinks = links.enter()
-            .append("line")
-            .attr("stroke-width", function (d) {
-                return Math.sqrt(d.value);
-            });
-
-        // for effect:
-        newlinks
-            .attr("opacity", 0)
-            .transition()
-            .attr("opacity", 1)
-
-        // Combine new links with old:
-        links = newlinks.merge(links);
-
-
-        // Update the simualtion:
-        simulation
-            .nodes(graph.nodes) // the data array, not the selection of nodes.
-            .on("tick", ticked)
-            .force("link").links(graph.links)
-
-        simulation.alpha(1).restart();
-
+        simulation.alpha(1).restart(); // Refresh layout
     }
 
     function mapTypeToColor(type) {
