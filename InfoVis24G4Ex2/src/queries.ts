@@ -234,15 +234,12 @@ export async function fetchCoordinates(venue: string): Promise<Table<{ latitude:
  */
 export async function fetchCities(country: string = ''): Promise<Table<{ city: Utf8 }>> {
   const conn = await db.connect();
-  let query = `
+  return await conn.query(`
     SELECT DISTINCT "e.city"
     FROM artvis.parquet
-  `;
-  if (country !== 'All') {
-    query += ` WHERE "e.country" = '${country}'`;
-  }
-  query += ` ORDER BY "e.city"`;
-  return await conn.query(query);
+    WHERE "e.country" = '${country}'
+    ORDER BY "e.city"
+  `);
 }
 
 /**
@@ -262,18 +259,18 @@ export async function fetchCountries(): Promise<Table<{ country: Utf8 }>> {
 export async function fetchDataByCityAndCountry(city: string = 'Vienna', country: string = 'AT'): Promise<Table<{ latitude: Utf8; longitude: Utf8 }>> {
   const conn = await db.connect();
   let query = `
-      SELECT "e.latitude", "e.longitude", "e.city", "e.country",  COUNT(*) as exhibition_count
+    SELECT "e.latitude", "e.longitude", COUNT(*) as exhibition_count
     FROM artvis.parquet
     WHERE 1=1
   `;
-  if (city && city !== 'All') {
+  if (city) {
     query += ` AND "e.city" = '${city}'`;
   }
-  if (country && country !== 'All') {
+  if (country) {
     query += ` AND "e.country" = '${country}'`;
   }
   query += `
-    GROUP BY "e.latitude", "e.longitude", "e.city", "e.country"
+    GROUP BY "e.latitude", "e.longitude"
   `;
   const result = await conn.query(query);
   console.log('fetchDataByCityAndCountry ',result)
@@ -281,40 +278,40 @@ export async function fetchDataByCityAndCountry(city: string = 'Vienna', country
 }
 
 export async function fetchCountriesWithExhibitions(
-  start_date: bigint = 1902n,
-  end_date: bigint = 1916n,
-  birthdateFrom: Date,
-  birthdateTo: Date,
-  deathdateFrom: Date,
-  deathdateTo: Date,
-  solo: boolean = true,
-  group: boolean = true,
-  auction: boolean = true,
-  male: boolean = true,
-  female: boolean = true
+    start_date: bigint = 1902n,
+    end_date: bigint = 1916n,
+    birthdateFrom: Date,
+    birthdateTo: Date,
+    deathdateFrom: Date,
+    deathdateTo: Date,
+    solo: boolean = true,
+    group: boolean = true,
+    auction: boolean = true,
+    male: boolean = true,
+    female: boolean = true
 ): Promise<Table<{ country: Utf8, exhibition_count: number }>> {
   console.log('fetchCountriesWithExhibitions',solo,group,auction)
   const conn = await db.connect();
   let query = `
-      SELECT "e.country" as country, COUNT(*) as exhibition_count,
-      SUM("e.paintings") as paintings_count,
-      COUNT(DISTINCT CONCAT(COALESCE("a.firstname", ''), ' ', COALESCE("a.lastname", ''))
-      ) AS artist_count,
-      SUM(CASE WHEN "e.type" = 'solo' THEN 1 ELSE 0 END) AS solo_count,
-      SUM(CASE WHEN "e.type" = 'group' THEN 1 ELSE 0 END) AS group_count,
-      SUM(CASE WHEN "e.type" = 'auction' THEN 1 ELSE 0 END) AS auction_count,
-      ROUND(
-      100.0 * COUNT(CASE WHEN "a.gender" = 'M' THEN 1 ELSE NULL END) / 
-      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
-      ) AS male_percentage,
-      ROUND(
-      100.0 * COUNT(CASE WHEN "a.gender" = 'F' THEN 1 ELSE NULL END) / 
-      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
-      ) AS female_percentage,
-      MIN("e.startdate" % 10000) AS earliest_year,
-      MAX("e.startdate" % 10000) AS latest_year
-      FROM artvis.parquet
-      WHERE 1=1
+    SELECT "e.country" as country, COUNT(*) as exhibition_count,
+           SUM("e.paintings") as paintings_count,
+           COUNT(DISTINCT CONCAT(COALESCE("a.firstname", ''), ' ', COALESCE("a.lastname", ''))
+           ) AS artist_count,
+           SUM(CASE WHEN "e.type" = 'solo' THEN 1 ELSE 0 END) AS solo_count,
+           SUM(CASE WHEN "e.type" = 'group' THEN 1 ELSE 0 END) AS group_count,
+           SUM(CASE WHEN "e.type" = 'auction' THEN 1 ELSE 0 END) AS auction_count,
+           ROUND(
+               100.0 * COUNT(CASE WHEN "a.gender" = 'M' THEN 1 ELSE NULL END) /
+               COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+           ) AS male_percentage,
+           ROUND(
+               100.0 * COUNT(CASE WHEN "a.gender" = 'F' THEN 1 ELSE NULL END) /
+               COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+           ) AS female_percentage,
+           MIN("e.startdate" % 10000) AS earliest_year,
+           MAX("e.startdate" % 10000) AS latest_year
+    FROM artvis.parquet
+    WHERE 1=1
   `;
 
   if (birthdateFrom && birthdateTo) {
@@ -361,41 +358,41 @@ export async function fetchCountriesWithExhibitions(
 
 
 export async function fetchExhibitionsByCityAndCountry(
-  start_date: bigint = 1902n,
-  end_date: bigint = 1916n,
-  birthdateFrom: Date,
-  birthdateTo: Date,
-  deathdateFrom: Date,
-  deathdateTo: Date,
-  solo: boolean = true,
-  group: boolean = true,
-  auction: boolean = true,
-  male: boolean = true,
-  female: boolean = true
+    start_date: bigint = 1902n,
+    end_date: bigint = 1916n,
+    birthdateFrom: Date,
+    birthdateTo: Date,
+    deathdateFrom: Date,
+    deathdateTo: Date,
+    solo: boolean = true,
+    group: boolean = true,
+    auction: boolean = true,
+    male: boolean = true,
+    female: boolean = true
 ): Promise<Table<{ exhibition_count: number }>> {
   console.log('fetchExhibitionsByCityAndCountry', solo, group, auction);
 
   const conn = await db.connect();
   let query = `
-      SELECT "e.country" as country, "e.city" as city, COUNT(*) as exhibition_count,
-      SUM("e.paintings") as paintings_count,
-      COUNT(DISTINCT CONCAT(COALESCE("a.firstname", ''), ' ', COALESCE("a.lastname", ''))
-      ) AS artist_count,
-      SUM(CASE WHEN "e.type" = 'solo' THEN 1 ELSE 0 END) AS solo_count,
-      SUM(CASE WHEN "e.type" = 'group' THEN 1 ELSE 0 END) AS group_count,
-      SUM(CASE WHEN "e.type" = 'auction' THEN 1 ELSE 0 END) AS auction_count,
-      ROUND(
-      100.0 * COUNT(CASE WHEN "a.gender" = 'M' THEN 1 ELSE NULL END) / 
-      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
-      ) AS male_percentage,
-      ROUND(
-      100.0 * COUNT(CASE WHEN "a.gender" = 'F' THEN 1 ELSE NULL END) / 
-      COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
-      ) AS female_percentage,
-      MIN("e.startdate" % 10000) AS earliest_year,
-      MAX("e.startdate" % 10000) AS latest_year
-      FROM artvis.parquet
-      WHERE 1=1
+    SELECT "e.country" as country, "e.city" as city, COUNT(*) as exhibition_count,
+           SUM("e.paintings") as paintings_count,
+           COUNT(DISTINCT CONCAT(COALESCE("a.firstname", ''), ' ', COALESCE("a.lastname", ''))
+           ) AS artist_count,
+           SUM(CASE WHEN "e.type" = 'solo' THEN 1 ELSE 0 END) AS solo_count,
+           SUM(CASE WHEN "e.type" = 'group' THEN 1 ELSE 0 END) AS group_count,
+           SUM(CASE WHEN "e.type" = 'auction' THEN 1 ELSE 0 END) AS auction_count,
+           ROUND(
+               100.0 * COUNT(CASE WHEN "a.gender" = 'M' THEN 1 ELSE NULL END) /
+               COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+           ) AS male_percentage,
+           ROUND(
+               100.0 * COUNT(CASE WHEN "a.gender" = 'F' THEN 1 ELSE NULL END) /
+               COUNT(CASE WHEN "a.gender" IN ('M', 'F') THEN 1 ELSE NULL END), 2
+           ) AS female_percentage,
+           MIN("e.startdate" % 10000) AS earliest_year,
+           MAX("e.startdate" % 10000) AS latest_year
+    FROM artvis.parquet
+    WHERE 1=1
   `;
 
   if (start_date) {
@@ -544,31 +541,146 @@ export async function fetchMaxPaintings(): Promise< number > {
   return maxPaintingsCount as number;
 }
 
-export async function fetchBasicExhbitionInfos(): Promise<Table<{ id: Utf8; title: Utf8; type: Utf8 }>> {
+export async function fetchBasicExhbitionInfos(
+    birthdateFrom: Date,
+    birthdateTo: Date,
+    deathdateFrom: Date,
+    deathdateTo: Date,
+    solo: boolean = true,
+    group: boolean = true,
+    auction: boolean = true,
+    male: boolean = true,
+    female: boolean = true): Promise<Table<{ id: Utf8; title: Utf8; type: Utf8 }>> {
+  console.log("FETCH EXHIB START....")
+
   const conn = await db.connect();
   let query = (`
     SELECT DISTINCT "e.id", "e.title", "e.type"
     FROM artvis.parquet
     WHERE 1 = 1
   `);
+
+  if (birthdateFrom && birthdateTo) {
+    query += ` AND "a.birthdate" BETWEEN '${birthdateFrom.toISOString().split('T')[0]}' AND '${birthdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (deathdateFrom && deathdateTo) {
+    query += ` AND "a.deathdate" BETWEEN '${deathdateFrom.toISOString().split('T')[0]}' AND '${deathdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (!solo || !group || !auction) {
+    query += ` AND "e.type" IN (`;
+    const types = [];
+    if (solo) types.push("'solo'");
+    if (group) types.push("'group'");
+    if (auction) types.push("'auction'");
+    query += types.join(", ");
+    query += `)`;
+  }
+
+  if (!male || !female) {
+    query += ` AND "a.gender" IN (`;
+    const genders = [];
+    if (male) genders.push("'M'");
+    if (female) genders.push("'F'");
+    query += genders.join(", ");
+    query += `)`;
+  }
+
   return await conn.query(query);
 }
 
-
-export async function fetchBasicArtistInfos(): Promise<Table<{ id: Utf8; firstname: Utf8; lastname: Utf8; gender: Utf8 }>> {
+export async function fetchBasicArtistInfos(
+    birthdateFrom: Date,
+    birthdateTo: Date,
+    deathdateFrom: Date,
+    deathdateTo: Date,
+    solo: boolean = true,
+    group: boolean = true,
+    auction: boolean = true,
+    male: boolean = true,
+    female: boolean = true): Promise<Table<{ id: Utf8; firstname: Utf8; lastname: Utf8; gender: Utf8 }>> {
+  console.log("FETCH ARTIST START....")
   const conn = await db.connect();
-  return await conn.query(`
+  let query = (`
     SELECT DISTINCT "a.id", "a.firstname","a.lastname","a.gender"
     FROM artvis.parquet
     WHERE 1=1
   `);
+
+  if (birthdateFrom && birthdateTo) {
+    query += ` AND "a.birthdate" BETWEEN '${birthdateFrom.toISOString().split('T')[0]}' AND '${birthdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (deathdateFrom && deathdateTo) {
+    query += ` AND "a.deathdate" BETWEEN '${deathdateFrom.toISOString().split('T')[0]}' AND '${deathdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (!solo || !group || !auction) {
+    query += ` AND "e.type" IN (`;
+    const types = [];
+    if (solo) types.push("'solo'");
+    if (group) types.push("'group'");
+    if (auction) types.push("'auction'");
+    query += types.join(", ");
+    query += `)`;
+  }
+
+  if (!male || !female) {
+    query += ` AND "a.gender" IN (`;
+    const genders = [];
+    if (male) genders.push("'M'");
+    if (female) genders.push("'F'");
+    query += genders.join(", ");
+    query += `)`;
+  }
+  return await conn.query(query);
 }
 
-export async function fetchArtistExhibitionLink(): Promise<Table<{ aid: Utf8; eid: Utf8 }>> {
+export async function fetchArtistExhibitionLink(
+    birthdateFrom: Date,
+    birthdateTo: Date,
+    deathdateFrom: Date,
+    deathdateTo: Date,
+    solo: boolean = true,
+    group: boolean = true,
+    auction: boolean = true,
+    male: boolean = true,
+    female: boolean = true
+): Promise<Table<{ aid: Utf8; eid: Utf8 }>> {
+  console.log("FETCH LINK START....")
+
   const conn = await db.connect();
-  return await conn.query(`
-    SELECT DISTINCT "a.id", "e.id"
-    FROM artvis.parquet
-    WHERE 1=1
+  let query = (`SELECT DISTINCT "a.id", "e.id"
+                FROM artvis.parquet
+                WHERE 1=1
   `);
+
+  if (birthdateFrom && birthdateTo) {
+    query += ` AND "a.birthdate" BETWEEN '${birthdateFrom.toISOString().split('T')[0]}' AND '${birthdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (deathdateFrom && deathdateTo) {
+    query += ` AND "a.deathdate" BETWEEN '${deathdateFrom.toISOString().split('T')[0]}' AND '${deathdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (!solo || !group || !auction) {
+    query += ` AND "e.type" IN (`;
+    const types = [];
+    if (solo) types.push("'solo'");
+    if (group) types.push("'group'");
+    if (auction) types.push("'auction'");
+    query += types.join(", ");
+    query += `)`;
+  }
+
+  if (!male || !female) {
+    query += ` AND "a.gender" IN (`;
+    const genders = [];
+    if (male) genders.push("'M'");
+    if (female) genders.push("'F'");
+    query += genders.join(", ");
+    query += `)`;
+  }
+  return await conn.query(query);
 }
