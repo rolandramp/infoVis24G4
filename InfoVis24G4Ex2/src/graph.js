@@ -20,7 +20,8 @@ export async function artistExhibitionGraph() {
         group = true,
         auction = true,
         male = true,
-        female = true) {
+        female = true,
+        artist) {
         // generate nodes:
         let n = Math.floor(Math.random() * 10) + 6;
 
@@ -35,7 +36,8 @@ export async function artistExhibitionGraph() {
             group,
             auction,
             male,
-            female);
+            female,
+            artist);
         const artists = await fetchBasicArtistInfos(
             birthdate_from,
             birthdate_to,
@@ -45,7 +47,8 @@ export async function artistExhibitionGraph() {
             group,
             auction,
             male,
-            female
+            female,
+            artist
         );
         const artistExhibitionlinks = await fetchArtistExhibitionLink(
             birthdate_from,
@@ -56,7 +59,8 @@ export async function artistExhibitionGraph() {
             group,
             auction,
             male,
-            female
+            female,
+            artist
         );
 
         console.log("Nr. Exhibitions ", exhibitions.numRows, "Nr. Artists ", artists.numRows, "Nr. Links ", artistExhibitionlinks.numRows);
@@ -245,7 +249,8 @@ export async function artistExhibitionGraph() {
         group,
         auction,
         male,
-        female) {
+        female,
+        artist) {
         console.log("Render New Graph");
         graph = await randomizeData(graph,
             birthdate_from,
@@ -256,7 +261,8 @@ export async function artistExhibitionGraph() {
             group,
             auction,
             male,
-            female);
+            female,
+            artist);
         console.log("Render New Graph 2");
         update();
     }

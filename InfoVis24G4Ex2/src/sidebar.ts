@@ -57,7 +57,7 @@ const showGraphButton = d3.select("#buttonContainerId").append("button").attr("i
     }
     app.appendChild(graphView.element);
     graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
-      deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
+      deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool, selectedArtist);
     // Deactive some sidebar elements on the graph view
     toggleSidebarElementsForGraphView(true);
   });
@@ -102,6 +102,7 @@ let birthdateFrom: Date = await fetchMinimumBirthdate();
 let birthdateTo: Date = await fetchMaximumBirthdate();
 let deathdateFrom: Date = await fetchMinimumDeathdate();
 let deathdateTo: Date = await fetchMaximumDeathdate();
+let selectedArtist : String;
 
 /**
  * Updates the visuals on the world map and graph view based on the current filter settings.
@@ -117,7 +118,7 @@ function do_updates_on_visuals(graph:boolean = true) {
     deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   if (graph) {
     graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
-      deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
+      deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool, selectedArtist);
   }
 }
 
@@ -551,6 +552,10 @@ async function updateArtistDatalist() {
   // Remove existing options to avoid duplicates
   artistDatalist.selectAll("option").remove();
 
+  artistDatalist.append("option")
+      .attr("value", `ALL`)
+      .attr("data-id", '-1'); // Store artist ID if needed
+
   for (const artist of artists) {
     artistDatalist.append("option")
       .attr("value", `${artist["a.firstname"]} ${artist["a.lastname"]}`)
@@ -568,9 +573,19 @@ toggleSidebarElementsForGraphView(false);
 
 // Handle Selection changes
 artistInput.on("change", function () {
-  const selectedArtist = d3.select(this).property("value");
-  console.log("Selected artist:", selectedArtist);
+  let selectedArtistName = d3.select(this).property("value");
 
+  artistDatalist.selectAll("option")
+      .each(function () {
+        const option =
+            d3.select(this);
+        if (option.attr("value") === selectedArtistName) {
+          selectedArtist = option.attr("data-id"); // Get the stored artist ID } });
+        }
+      });
+  console.log("Selected artist:", selectedArtist);
+ graphView.renderNewGraph(birthdateFrom, birthdateTo, deathdateFrom,
+        deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool, selectedArtist);
   // You can process the selected artist here (e.g., filtering visualizations)
 });
 

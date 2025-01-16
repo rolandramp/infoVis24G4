@@ -601,7 +601,8 @@ export async function fetchBasicExhbitionInfos(
     group: boolean = true,
     auction: boolean = true,
     male: boolean = true,
-    female: boolean = true): Promise<Table<{ id: Utf8; title: Utf8; type: Utf8 }>> {
+    female: boolean = true,
+    artist: String): Promise<Table<{ id: Utf8; title: Utf8; type: Utf8 }>> {
   console.log("FETCH EXHIB START....")
 
   const conn = await db.connect();
@@ -629,14 +630,13 @@ export async function fetchBasicExhbitionInfos(
     query += `)`;
   }
 
-  if (!male || !female) {
-    query += ` AND "a.gender" IN (`;
-    const genders = [];
-    if (male) genders.push("'M'");
-    if (female) genders.push("'F'");
-    query += genders.join(", ");
-    query += `)`;
+  console.log("Artist ", artist);
+
+  if (artist && artist!="-1") {
+    query += ` AND "a.id" = '${artist}'`;
   }
+
+  console.log("QUERY ", query);
 
   return await conn.query(query);
 }
@@ -650,7 +650,8 @@ export async function fetchBasicArtistInfos(
     group: boolean = true,
     auction: boolean = true,
     male: boolean = true,
-    female: boolean = true): Promise<Table<{ id: Utf8; firstname: Utf8; lastname: Utf8; gender: Utf8 }>> {
+    female: boolean = true,
+    artist: String): Promise<Table<{ id: Utf8; firstname: Utf8; lastname: Utf8; gender: Utf8 }>> {
   console.log("FETCH ARTIST START....")
   const conn = await db.connect();
   let query = (`
@@ -685,6 +686,11 @@ export async function fetchBasicArtistInfos(
     query += genders.join(", ");
     query += `)`;
   }
+
+  if (artist && artist!="-1") {
+    query += ` AND "a.id" = '${artist}'`;
+  }
+
   return await conn.query(query);
 }
 
@@ -697,7 +703,8 @@ export async function fetchArtistExhibitionLink(
     group: boolean = true,
     auction: boolean = true,
     male: boolean = true,
-    female: boolean = true
+    female: boolean = true,
+    artist: String
 ): Promise<Table<{ aid: Utf8; eid: Utf8 }>> {
   console.log("FETCH LINK START....")
 
@@ -733,5 +740,10 @@ export async function fetchArtistExhibitionLink(
     query += genders.join(", ");
     query += `)`;
   }
+
+  if (artist && artist!="-1") {
+    query += ` AND "a.id" = '${artist}'`;
+  }
+
   return await conn.query(query);
 }
