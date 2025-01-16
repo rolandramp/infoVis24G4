@@ -234,12 +234,15 @@ export async function fetchCoordinates(venue: string): Promise<Table<{ latitude:
  */
 export async function fetchCities(country: string = ''): Promise<Table<{ city: Utf8 }>> {
   const conn = await db.connect();
-  return await conn.query(`
+  let query = `
     SELECT DISTINCT "e.city"
     FROM artvis.parquet
-    WHERE "e.country" = '${country}'
-    ORDER BY "e.city"
-  `);
+  `;
+  if (country !== 'All') {
+    query += ` WHERE "e.country" = '${country}'`;
+  }
+  query += ` ORDER BY "e.city"`;
+  return await conn.query(query);
 }
 
 /**
@@ -256,24 +259,72 @@ export async function fetchCountries(): Promise<Table<{ country: Utf8 }>> {
   `);
 }
 
-export async function fetchDataByCityAndCountry(city: string = 'Vienna', country: string = 'AT'): Promise<Table<{ latitude: Utf8; longitude: Utf8 }>> {
+export async function fetchDataByCityAndCountry(city: string = 'All',
+                                                country: string = 'All',
+                                                start_date: bigint = 1902n,
+                                                end_date: bigint = 1916n,
+                                                birthdateFrom: Date,
+                                                birthdateTo: Date,
+                                                deathdateFrom: Date,
+                                                deathdateTo: Date,
+                                                solo: boolean = true,
+                                                group: boolean = true,
+                                                auction: boolean = true,
+                                                male: boolean = true,
+                                                female: boolean = true
+): Promise<Table<{ latitude: Utf8; longitude: Utf8 }>> {
   const conn = await db.connect();
   let query = `
-    SELECT "e.latitude", "e.longitude", COUNT(*) as exhibition_count
+      SELECT "e.latitude", "e.longitude", "e.city", "e.country",  SUM("e.paintings") as paintings_count
     FROM artvis.parquet
     WHERE 1=1
   `;
-  if (city) {
+  if (city && city !== 'All') {
     query += ` AND "e.city" = '${city}'`;
   }
-  if (country) {
+  if (country && country !== 'All') {
     query += ` AND "e.country" = '${country}'`;
   }
+
+  if (birthdateFrom && birthdateTo) {
+    query += ` AND "a.birthdate" BETWEEN '${birthdateFrom.toISOString().split('T')[0]}' AND '${birthdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (deathdateFrom && deathdateTo) {
+    query += ` AND "a.deathdate" BETWEEN '${deathdateFrom.toISOString().split('T')[0]}' AND '${deathdateTo.toISOString().split('T')[0]}'`;
+  }
+
+  if (start_date) {
+    query += ` AND "e.startdate" >= ${start_date}`;
+  }
+
+  if (end_date) {
+    query += ` AND "e.startdate" <= ${end_date}`;
+  }
+
+  if (!solo || !group || !auction) {
+    query += ` AND "e.type" IN (`;
+    const types = [];
+    if (solo) types.push("'solo'");
+    if (group) types.push("'group'");
+    if (auction) types.push("'auction'");
+    query += types.join(", ");
+    query += `)`;
+  }
+
+  if (!male || !female ) {
+    query += ` AND "a.gender" IN (`;
+    const genders = [];
+    if (male) genders.push("'M'");
+    if (female) genders.push("'F'");
+    query += genders.join(", ");
+    query += `)`;
+  }
+
   query += `
-    GROUP BY "e.latitude", "e.longitude"
+    GROUP BY "e.latitude", "e.longitude", "e.city", "e.country"
   `;
   const result = await conn.query(query);
-  console.log('fetchDataByCityAndCountry ',result)
   return result;
 }
 

@@ -1,7 +1,14 @@
-import * as d3 from "d3"
-import {  legendColor, legendSize} from "d3-svg-legend"
-import { init_db, fetchDataByCityAndCountry, fetchCountriesWithExhibitions, translate_iso_to_geojson, fetchMaxPaintings } from "./queries";
+import * as d3 from "d3";
+import { legendColor, legendSize } from "d3-svg-legend";
+import {
+  init_db,
+  fetchDataByCityAndCountry,
+  fetchCountriesWithExhibitions,
+  translate_iso_to_geojson,
+  fetchMaxPaintings
+} from "./queries";
 import { fetchExhibitionsByCityAndCountry } from "./queries";
+
 interface GeoJson {
   type: string;
   features: {
@@ -24,7 +31,7 @@ export async function world_map() {
   const height = 600;
 
   // max number of paintings at location
-  const max_paintings = await fetchMaxPaintings()
+  const max_paintings = await fetchMaxPaintings();
 
   // Create a scale for the circle radius based on the exhibition count
   const radiusScale = d3.scaleSqrt()
@@ -34,11 +41,11 @@ export async function world_map() {
   // Append the legend for the radius scale
   const radiusLegend = legendSize()
     .scale(radiusScale)
-    .shape('circle')
+    .shape("circle")
     .shapePadding(15)
     .labelOffset(10)
-    .orient('vertical')
-    .title('Paintings Count');
+    .orient("vertical")
+    .title("Paintings Count");
 
   let svg = d3
     .create("svg")
@@ -77,22 +84,22 @@ export async function world_map() {
   const countriesWithExhibitions = await fetchCountriesWithExhibitions();
 
   for (const row of countriesWithExhibitions) {
-    countryNames.set(translate_iso_to_geojson(row['country']), row['country']);
-    exhibitionCounts.set(translate_iso_to_geojson(row['country']), row['exhibition_count']);
-    soloCounts.set(translate_iso_to_geojson(row['country']), row['solo_count']);
-    groupCounts.set(translate_iso_to_geojson(row['country']), row['group_count']);
-    auctionCounts.set(translate_iso_to_geojson(row['country']), row['auction_count']);
-    paintingsCounts.set(translate_iso_to_geojson(row['country']), row['paintings_count']);
-    artistCounts.set(translate_iso_to_geojson(row['country']), row['artist_count']);
-    malePercs.set(translate_iso_to_geojson(row['country']), row['male_percentage']);
-    femalePercs.set(translate_iso_to_geojson(row['country']), row['female_percentage']);
-    earliest_year.set(translate_iso_to_geojson(row['country']), row['earliest_year']);
-    latest_year.set(translate_iso_to_geojson(row['country']), row['latest_year']);
+    countryNames.set(translate_iso_to_geojson(row["country"]), row["country"]);
+    exhibitionCounts.set(translate_iso_to_geojson(row["country"]), row["exhibition_count"]);
+    soloCounts.set(translate_iso_to_geojson(row["country"]), row["solo_count"]);
+    groupCounts.set(translate_iso_to_geojson(row["country"]), row["group_count"]);
+    auctionCounts.set(translate_iso_to_geojson(row["country"]), row["auction_count"]);
+    paintingsCounts.set(translate_iso_to_geojson(row["country"]), row["paintings_count"]);
+    artistCounts.set(translate_iso_to_geojson(row["country"]), row["artist_count"]);
+    malePercs.set(translate_iso_to_geojson(row["country"]), row["male_percentage"]);
+    femalePercs.set(translate_iso_to_geojson(row["country"]), row["female_percentage"]);
+    earliest_year.set(translate_iso_to_geojson(row["country"]), row["earliest_year"]);
+    latest_year.set(translate_iso_to_geojson(row["country"]), row["latest_year"]);
   }
 
 
-  console.log('exhibitionCounts',Array.from(exhibitionCounts.values()))
-  console.log('array Max',d3.max(Array.from(exhibitionCounts.values())))
+  console.log("exhibitionCounts", Array.from(exhibitionCounts.values()));
+  console.log("array Max", d3.max(Array.from(exhibitionCounts.values())));
 
   // Create a color scale
   const color_c = d3.scaleSequential(d3.interpolateBlues)
@@ -105,22 +112,21 @@ export async function world_map() {
           .data(data.features)
           .enter()
           .append("path")
-            .on("click", clicked)
-            .attr("d", d => path(d as any) || "")
-            .attr("fill", d => {
-              const count = exhibitionCounts.get(d.id) || 0;
-              return color_c(Number(count));
-            })
-          .attr("stroke", "#fff")
+          .attr("d", d => path(d as any) || "")
+          .attr("fill", d => {
+            const count = exhibitionCounts.get(d.id) || 0;
+            return color_c(Number(count));
+          })
+          .attr("stroke", "#fff");
       }
 
       updateCountryTooltips(countries, countryNames, exhibitionCounts, soloCounts, groupCounts,
-         auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
-  })
+        auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
+    });
 
-  svg.append('g')
-    .attr('class', 'legendSize')
-    .attr('transform', `translate(40, ${height-80})`)
+  svg.append("g")
+    .attr("class", "legendSize")
+    .attr("transform", `translate(40, ${height - 80})`)
     .call(radiusLegend);
 
   svg.call(zoom);
@@ -131,7 +137,7 @@ export async function world_map() {
     .shapeWidth(200)
     .orient("horizontal")
     .labelFormat(d3.format(".0f"))
-    .title('Exhibitions Count');
+    .title("Exhibitions Count");
 
   svg.append("g")
     .attr("transform", "translate(10,20)")
@@ -147,23 +153,8 @@ export async function world_map() {
     );
   }
 
-  function clicked(event, d) {
-    const [[x0, y0], [x1, y1]] = path.bounds(d);
-    event.stopPropagation();
-    countries.transition().style("fill", null);
-    d3.select(this).transition().style("fill", "red");
-    svg.transition().duration(750).call(
-      zoom.transform,
-      d3.zoomIdentity
-        .translate(width / 2, height / 2)
-        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
-        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-      d3.pointer(event, svg.node())
-    );
-  }
-
   function zoomed(event) {
-    const {transform} = event;
+    const { transform } = event;
     g.attr("transform", transform);
     g.attr("stroke-width", 1 / transform.k);
   }
@@ -175,13 +166,19 @@ export async function world_map() {
    * @param {Array<{ latitude: number, longitude: number, city: string, country: string }>} data -
    *        An array of objects containing the latitude, longitude, city, and country information.
    */
-  function update(data: { latitude: number, longitude: number, city: string, country: string, exhibition_count: number }[]) {
+  function update(data: {
+    latitude: number,
+    longitude: number,
+    city: string,
+    country: string,
+    paintings_count: number
+  }[]) {
 
 
-    const circles = countries.selectAll('circle')
+    const circles = countries.selectAll("circle")
       .data(data, d => `${d.latitude},${d.longitude}`);
 
-    console.log("update",circles)
+    console.log("update", circles);
 
 
     // Remove old circles
@@ -189,28 +186,41 @@ export async function world_map() {
 
     // Update existing circles
     circles
-      .attr('cx', d => projection([d.longitude, d.latitude])[0])
-      .attr('cy', d => projection([d.longitude, d.latitude])[1])
+      .attr("cx", d => projection([d.longitude, d.latitude])[0])
+      .attr("cy", d => projection([d.longitude, d.latitude])[1]);
 
     // Add new circles
-    const newCircles = circles.enter()
-      .append('circle')
-      .attr('cx', d => projection([d.longitude, d.latitude])[0])
-      .attr('cy', d => projection([d.longitude, d.latitude])[1])
-      .attr('r', d => radiusScale(d.exhibition_count))
-      // .attr('r', 2)
-      .attr('fill', 'green')
-      .attr('opacity', 0.5);
+    circles.enter()
+      .append("circle")
+      .attr("cx", d => projection([d.longitude, d.latitude])[0])
+      .attr("cy", d => projection([d.longitude, d.latitude])[1])
+      .attr("r", d => radiusScale(d.paintings_count))
+      .attr("fill", "orange")
+      .attr("opacity", 0.7);
   }
 
   // Function to update coordinates based on selected city and country
-  async function update_coordinates(city: string = 'All', country: string = 'All') {
+  async function update_coordinates(city: string = "All",
+                                    country: string = "All",
+                                    start_date: bigint = 1902n,
+                                    end_date: bigint = 1916n,
+                                    birthdateFrom: Date,
+                                    birthdateTo: Date,
+                                    deathdateFrom: Date,
+                                    deathdateTo: Date,
+                                    solo: boolean = true,
+                                    group: boolean = true,
+                                    auction: boolean = true,
+                                    male: boolean = true,
+                                    female: boolean = true
+  ) {
     try {
       // Fetch data by city and country
-      const data = await fetchDataByCityAndCountry(city, country);
+      const data = await fetchDataByCityAndCountry(city,
+        country, start_date, end_date, birthdateFrom, birthdateTo, deathdateFrom, deathdateTo, solo, group, auction, male, female);
       const latitudes = data.getChild("e.latitude")!.toJSON();
       const longitudes = data.getChild("e.longitude")!.toJSON();
-      const exhibition_count = data.getChild("exhibition_count")!.toJSON();
+      const paintings_count = data.getChild("paintings_count")!.toJSON();
       const city_r = data.getChild("e.city")!.toJSON();
       const country_r = data.getChild("e.country")!.toJSON();
 
@@ -220,11 +230,10 @@ export async function world_map() {
         longitude: longitudes[index],
         city: city_r[index],
         country: country_r[index],
-        exhibition_count: Number(exhibition_count[index])
+        paintings_count: Number(paintings_count[index])
       }));
 
       // Update the world map with all the new coordinates
-      console.log('update_coordinates',coordinates)
       update(coordinates);
     } catch (error) {
       // Handle any errors that occur during the fetch or update process
@@ -261,7 +270,7 @@ export async function world_map() {
                                     male: boolean = true,
                                     female: boolean = true
   ) {
-    console.log('updateCityTooltips',solo,group,auction)
+    console.log("updateCityTooltips", solo, group, auction);
     const citiesWithExhibitions = await fetchExhibitionsByCityAndCountry(
       exhibition_start_date,
       exhibition_end_date,
@@ -284,23 +293,23 @@ export async function world_map() {
     const femalePercs = new Map<string, number>();
     const earliest_year = new Map<string, number>();
     const latest_year = new Map<string, number>();
-  
+
     for (const row of citiesWithExhibitions) {
-      exhibitionCounts.set(row['city'], row['exhibition_count']);
-      soloCounts.set(row['city'], row['solo_count']);
-      groupCounts.set(row['city'], row['group_count']);
-      auctionCounts.set(row['city'], row['auction_count']);
-      paintingsCounts.set(row['city'], row['paintings_count']);
-      artistCounts.set(row['city'], row['artist_count']);
-      malePercs.set(row['city'], row['male_percentage']);
-      femalePercs.set(row['city'], row['female_percentage']);
-      earliest_year.set(row['city'], row['earliest_year']);
-      latest_year.set(row['city'], row['latest_year']);
+      exhibitionCounts.set(row["city"], row["exhibition_count"]);
+      soloCounts.set(row["city"], row["solo_count"]);
+      groupCounts.set(row["city"], row["group_count"]);
+      auctionCounts.set(row["city"], row["auction_count"]);
+      paintingsCounts.set(row["city"], row["paintings_count"]);
+      artistCounts.set(row["city"], row["artist_count"]);
+      malePercs.set(row["city"], row["male_percentage"]);
+      femalePercs.set(row["city"], row["female_percentage"]);
+      earliest_year.set(row["city"], row["earliest_year"]);
+      latest_year.set(row["city"], row["latest_year"]);
     }
-    console.log('exhibitionCounts',exhibitionCounts);
-    console.log('artistCounts',artistCounts);
-    console.log('malePercentages',malePercs);
-    
+    console.log("exhibitionCounts", exhibitionCounts);
+    console.log("artistCounts", artistCounts);
+    console.log("malePercentages", malePercs);
+
     attachTooltip(
       countries.selectAll("circle"),
       d => {
@@ -318,9 +327,9 @@ export async function world_map() {
       <strong>Exhibitions:</strong> ${exhibitionCount} (<strong>Solo:</strong> ${soloCount} | <strong>Group:</strong> ${groupCount} | <strong>Auction:</strong> ${auctionCount})<br>
       <strong>Paintings:</strong> ${paintingsCount}<br>
       <strong>Artists:</strong> ${artistCount} (<strong>Male:</strong> ${malePerc}% | <strong>Female:</strong> ${femalePerc}%)<br>
-      <strong>Earliest:</strong> ${earliest} <strong>Latest:</strong> ${latest}<br>`
+      <strong>Earliest:</strong> ${earliest} <strong>Latest:</strong> ${latest}<br>`;
       }
-    ); 
+    );
   }
 
   /**
@@ -351,7 +360,7 @@ export async function world_map() {
                                      auction: boolean = true,
                                      male: boolean = true,
                                      female: boolean = true) {
-    console.log('updateChoroplethMap',exhibition_start_date, exhibition_end_date, solo,group,auction)
+    console.log("updateChoroplethMap", exhibition_start_date, exhibition_end_date, solo, group, auction);
     const countriesWithExhibitions = await fetchCountriesWithExhibitions(
       exhibition_start_date,
       exhibition_end_date,
@@ -364,31 +373,31 @@ export async function world_map() {
       auction,
       male,
       female);
-    
-      const countryNames = new Map<string, number>();
-      const exhibitionCounts = new Map<string, number>();
-      const soloCounts = new Map<string, number>();
-      const groupCounts = new Map<string, number>();
-      const auctionCounts = new Map<string, number>();
-      const paintingsCounts = new Map<string, number>();
-      const artistCounts = new Map<string, number>();
-      const malePercs = new Map<string, number>();
-      const femalePercs = new Map<string, number>();
-      const earliest_year = new Map<string, number>();
-      const latest_year = new Map<string, number>();
+
+    const countryNames = new Map<string, number>();
+    const exhibitionCounts = new Map<string, number>();
+    const soloCounts = new Map<string, number>();
+    const groupCounts = new Map<string, number>();
+    const auctionCounts = new Map<string, number>();
+    const paintingsCounts = new Map<string, number>();
+    const artistCounts = new Map<string, number>();
+    const malePercs = new Map<string, number>();
+    const femalePercs = new Map<string, number>();
+    const earliest_year = new Map<string, number>();
+    const latest_year = new Map<string, number>();
 
     for (const row of countriesWithExhibitions) {
-      countryNames.set(translate_iso_to_geojson(row['country']), row['country']);
-      exhibitionCounts.set(translate_iso_to_geojson(row['country']), row['exhibition_count']);
-      soloCounts.set(translate_iso_to_geojson(row['country']), row['solo_count']);
-      groupCounts.set(translate_iso_to_geojson(row['country']), row['group_count']);
-      auctionCounts.set(translate_iso_to_geojson(row['country']), row['auction_count']);
-      paintingsCounts.set(translate_iso_to_geojson(row['country']), row['paintings_count']);
-      artistCounts.set(translate_iso_to_geojson(row['country']), row['artist_count']);
-      malePercs.set(translate_iso_to_geojson(row['country']), row['male_percentage']);
-      femalePercs.set(translate_iso_to_geojson(row['country']), row['female_percentage']);
-      earliest_year.set(translate_iso_to_geojson(row['country']), row['earliest_year']);
-      latest_year.set(translate_iso_to_geojson(row['country']), row['latest_year']);
+      countryNames.set(translate_iso_to_geojson(row["country"]), row["country"]);
+      exhibitionCounts.set(translate_iso_to_geojson(row["country"]), row["exhibition_count"]);
+      soloCounts.set(translate_iso_to_geojson(row["country"]), row["solo_count"]);
+      groupCounts.set(translate_iso_to_geojson(row["country"]), row["group_count"]);
+      auctionCounts.set(translate_iso_to_geojson(row["country"]), row["auction_count"]);
+      paintingsCounts.set(translate_iso_to_geojson(row["country"]), row["paintings_count"]);
+      artistCounts.set(translate_iso_to_geojson(row["country"]), row["artist_count"]);
+      malePercs.set(translate_iso_to_geojson(row["country"]), row["male_percentage"]);
+      femalePercs.set(translate_iso_to_geojson(row["country"]), row["female_percentage"]);
+      earliest_year.set(translate_iso_to_geojson(row["country"]), row["earliest_year"]);
+      latest_year.set(translate_iso_to_geojson(row["country"]), row["latest_year"]);
     }
 
     const color_c = d3.scaleSequential(d3.interpolateBlues)
@@ -400,8 +409,8 @@ export async function world_map() {
         return color_c(Number(count));
       });
 
-      updateCountryTooltips(countries, countryNames, exhibitionCounts, soloCounts, groupCounts,
-        auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
+    updateCountryTooltips(countries, countryNames, exhibitionCounts, soloCounts, groupCounts,
+      auctionCounts, paintingsCounts, artistCounts, malePercs, femalePercs, earliest_year, latest_year);
 
     // Update the legend
     svg.select("g.legend").remove();
@@ -428,23 +437,23 @@ export async function world_map() {
  * Attaches tooltip behavior to a D3 selection.
  * Enables displaying dynamic tooltips when a user hovers over elements in a D3 visualization.
  *
- * @param {d3.Selection<d3.BaseType, any, any, any>} selection - 
- *        The D3 selection to which the tooltip behavior will be attached. 
- *        This selection represents SVG elements (e.g., `path`, `circle`, `rect`) 
+ * @param {d3.Selection<d3.BaseType, any, any, any>} selection -
+ *        The D3 selection to which the tooltip behavior will be attached.
+ *        This selection represents SVG elements (e.g., `path`, `circle`, `rect`)
  *        that respond to mouse events.
- * 
- * @param {function(any): string} onMouseOverHtml - 
+ *
+ * @param {function(any): string} onMouseOverHtml -
  *        A callback function that generates the HTML content for the tooltip.
  *        Takes the data object (`d`) bound to the hovered element as input
  *        and returns a string containing the tooltip's HTML.
- * 
+ *
  * Behavior:
  * - Mouse Events:
- *   - `mouseover`: 
+ *   - `mouseover`:
  *        Updates the tooltip content using the `onMouseOverHtml` function and makes it visible.
- *   - `mousemove`: 
+ *   - `mousemove`:
  *        Dynamically positions the tooltip near the mouse cursor.
- *   - `mouseout`: 
+ *   - `mouseout`:
  *        Hides the tooltip when the mouse leaves the element.
  * - Tooltip Styling:
  *   - Tooltip position is dynamically adjusted based on the mouse cursor's `pageX` and `pageY`.
@@ -455,14 +464,14 @@ function attachTooltip(
   onMouseOverHtml: (d: any) => string
 ) {
   const tooltip = d3.select("body")
-  .append("div")
-  .style("position", "absolute")
-  .style("background", "white")
-  .style("border", "1px solid black")
-  .style("padding", "5px")
-  .style("border-radius", "5px")
-  .style("visibility", "hidden")
-  .style("pointer-events", "none");
+    .append("div")
+    .style("position", "absolute")
+    .style("background", "white")
+    .style("border", "1px solid black")
+    .style("padding", "5px")
+    .style("border-radius", "5px")
+    .style("visibility", "hidden")
+    .style("pointer-events", "none");
 
   selection
     .on("mouseover", (event, d) => {
@@ -481,17 +490,17 @@ function attachTooltip(
 }
 
 function updateCountryTooltips(countries: d3.Selection<d3.SVGElement, any, any, any>,
-  countryNames: Map<string, number>,
-  exhibitionCounts: Map<string, number>,
-  soloCounts: Map<string, number>,
-  groupCounts: Map<string, number>,
-  auctionCounts: Map<string, number>,
-  paintingsCounts: Map<string, number>,
-  artistCounts: Map<string, number>,
-  malePercs: Map<string, number>,
-  femalePercs: Map<string, number>,
-  earliest_year: Map<string, number>,
-  latest_year: Map<string, number>
+                               countryNames: Map<string, number>,
+                               exhibitionCounts: Map<string, number>,
+                               soloCounts: Map<string, number>,
+                               groupCounts: Map<string, number>,
+                               auctionCounts: Map<string, number>,
+                               paintingsCounts: Map<string, number>,
+                               artistCounts: Map<string, number>,
+                               malePercs: Map<string, number>,
+                               femalePercs: Map<string, number>,
+                               earliest_year: Map<string, number>,
+                               latest_year: Map<string, number>
 ) {
   attachTooltip(
     countries.selectAll("path"),
@@ -511,7 +520,7 @@ function updateCountryTooltips(countries: d3.Selection<d3.SVGElement, any, any, 
     <strong>Exhibitions:</strong> ${exhibitionCount} (<strong>Solo:</strong> ${soloCount} | <strong>Group:</strong> ${groupCount} | <strong>Auction:</strong> ${auctionCount})<br>
     <strong>Paintings:</strong> ${paintingsCount}<br>
     <strong>Artists:</strong> ${artistCount} (<strong>Male:</strong> ${malePerc}% | <strong>Female:</strong> ${femalePerc}%)<br>
-    <strong>Earliest:</strong> ${earliest} <strong>Latest:</strong> ${latest}<br>`
+    <strong>Earliest:</strong> ${earliest} <strong>Latest:</strong> ${latest}<br>`;
     }
   );
 }
