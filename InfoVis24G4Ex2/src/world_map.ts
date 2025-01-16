@@ -199,7 +199,7 @@ export async function world_map() {
       .attr('cy', d => projection([d.longitude, d.latitude])[1])
       .attr('r', d => radiusScale(d.exhibition_count))
       // .attr('r', 2)
-      .attr('fill', 'green')
+      .attr('fill', 'orange')
       .attr('opacity', 0.5);
   }
 

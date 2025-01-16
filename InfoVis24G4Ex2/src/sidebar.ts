@@ -97,6 +97,7 @@ let deathdateTo: Date = await fetchMaximumDeathdate();
 console.log('birthdateFrom',birthdateFrom);
 console.log('birthdateTo',birthdateTo);
 
+
 d3.select(sidebar).append("h4").text("Events from / to").style("margin-bottom", "5px");
 
 // Create a slider for the beginning year
@@ -115,8 +116,12 @@ const begin_year_silderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 begin_year_slider.on("input", function() {
-  const value = d3.select(this).property("value");
-  exibition_start_year = value;
+  let value = parseInt(d3.select(this).property("value"));
+  if (value > parseInt(end_year_slider.property("value"))) {
+    value = parseInt(end_year_slider.property("value"));
+    d3.select(this).property("value", value);
+  }
+  exibition_start_year = BigInt(value);
   begin_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
@@ -140,8 +145,12 @@ const end_year_silderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the end_year_slider value changes
 end_year_slider.on("input", function() {
-  const value: bigint = d3.select(this).property("value");
-  exibition_end_year = value;
+  let value = parseInt(d3.select(this).property("value"));
+  if (value < parseInt(begin_year_slider.property("value"))) {
+    value = parseInt(begin_year_slider.property("value"));
+    d3.select(this).property("value", value);
+  }
+  exibition_end_year = BigInt(value);
   end_year_silderValue.text(value.toString());
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
@@ -166,15 +175,19 @@ const birthdateFromSlider = d3.select(sidebar).append("input")
     .style("width", "100%");
 
 // Create a span to display the begin_year_slider value
-const birthdateFromSilderValue = d3.select(sidebar).append("span")
+const birthdateFromSliderValue = d3.select(sidebar).append("span")
     .style("margin-left", "10px")
     .text(new Date(parseInt(birthdateFromSlider.property("value"))).toISOString().split('T')[0]);
 
 // Update the span text when the begin_year_slider value changes
 birthdateFromSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value > birthdateTo) {
+    value = birthdateTo;
+    d3.select(this).property("value", birthdateTo.getTime());
+  }
   birthdateFrom = value;
-  birthdateFromSilderValue.text(value.toISOString().split('T')[0]);
+  birthdateFromSliderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
       deathdateTo, solo_bool, group_bool, auction_bool, male_bool, female_bool);
   worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -198,7 +211,11 @@ const birthdateToSilderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 birthdateToSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value < birthdateFrom) {
+    value = birthdateFrom;
+    d3.select(this).property("value", birthdateFrom.getTime());
+  }
   birthdateTo = value;
   birthdateToSilderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -230,7 +247,11 @@ const deathdateFromSliderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 deathdateFromSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value > deathdateTo) {
+    value = deathdateTo;
+    d3.select(this).property("value", deathdateTo.getTime());
+  }
   deathdateFrom = value;
   deathdateFromSliderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -256,7 +277,11 @@ const deathdateToSilderValue = d3.select(sidebar).append("span")
 
 // Update the span text when the begin_year_slider value changes
 deathdateToSlider.on("input", function() {
-  const value = new Date(parseInt(d3.select(this).property("value")));
+  let value = new Date(parseInt(d3.select(this).property("value")));
+  if (value < deathdateFrom) {
+    value = deathdateFrom;
+    d3.select(this).property("value", deathdateFrom.getTime());
+  }
   deathdateTo = value;
   deathdateToSilderValue.text(value.toISOString().split('T')[0]);
   worldMap.updateChoroplethMap(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
@@ -402,6 +427,9 @@ const country_select_box = d3.select(sidebar).append("select")
 
 // Fetch and add options to the country select box
 const countries = await fetchCountries();
+country_select_box.append("option")
+  .attr("value", "All")
+  .text("All");
 for (const country of countries) {
   country_select_box.append("option")
       .attr("value", country["e.country"])
@@ -415,15 +443,19 @@ country_select_box.on("change", async function() {
   // Fetch and update the city options based on the selected country
   const cities = await fetchCities(country);
   city_select_box.selectAll("option").remove();
+  city_select_box.append("option")
+    .attr("value", "All")
+    .text("All");
   for (const city of cities) {
     city_select_box.append("option")
         .attr("value", city["e.city"])
         .text(city["e.city"]);
   }
-
   const city = city_select_box.property("value");
   // Update coordinates based on the new selection
-  updateCityCircles(city, country, exibition_start_year);
+  await updateCityCircles(city, country,exibition_start_year, exibition_end_year,
+    birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
+    solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Selected value:", country);
 });
 
@@ -440,7 +472,7 @@ const city_select_box = d3.select(sidebar).append("select")
     .attr("id", "city_select_box_id");
 
 // Fetch and add options to the city select box
-let cities = await fetchCities("AT");
+let cities = await fetchCities("All");
 for (const city of cities) {
   city_select_box.append("option")
       .attr("value", city["e.city"])
@@ -448,10 +480,10 @@ for (const city of cities) {
 }
 
 // Add an event listener to the city select box
-city_select_box.on("change", function() {
+city_select_box.on("change", async function() {
   const city = city_select_box.property("value");
   const country = country_select_box.property("value");
-  updateCityCircles(city, country, exibition_start_year, exibition_end_year,
+  await updateCityCircles(city, country, exibition_start_year, exibition_end_year,
       birthdateFrom, birthdateTo, deathdateFrom, deathdateTo,
       solo_bool, group_bool, auction_bool, male_bool, female_bool);
   console.log("Selected city:", city);
@@ -465,7 +497,7 @@ async function updateCityCircles(city, country, exibition_start_year, exibition_
     await worldMap.update_coordinates(city, country);
 
     // Update tooltips after coordinates have been updated
-    worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
+    await worldMap.updateCityTooltips(exibition_start_year, exibition_end_year, birthdateFrom, birthdateTo, deathdateFrom,
         deathdateTo,solo_bool, group_bool, auction_bool, male_bool, female_bool);
   } catch (error) {
     console.error("Error updating the world map:", error);
