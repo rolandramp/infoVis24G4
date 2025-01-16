@@ -206,7 +206,6 @@ birthdateFromSlider.on("input", function() {
     d3.select(this).property("value", birthdateTo.getTime());
   }
   birthdateFrom = value;
-  updateArtistDatalist();
   birthdateFromSliderValue.text(value.toISOString().split("T")[0]);
 }).on("mouseup", function() {
   do_updates_on_visuals();
@@ -235,7 +234,6 @@ birthdateToSlider.on("input", function() {
     d3.select(this).property("value", birthdateFrom.getTime());
   }
   birthdateTo = value;
-  updateArtistDatalist();
   birthdateToSilderValue.text(value.toISOString().split("T")[0]);
 }).on("mouseup", function() {
   do_updates_on_visuals();
@@ -272,7 +270,6 @@ deathdateFromSlider.on("input", function() {
     d3.select(this).property("value", deathdateTo.getTime());
   }
   deathdateFrom = value;
-  updateArtistDatalist();
   deathdateFromSliderValue.text(value.toISOString().split("T")[0]);
 }).on("mouseup", function() {
   do_updates_on_visuals();
@@ -300,8 +297,7 @@ deathdateToSlider.on("input", function() {
     value = deathdateFrom;
     d3.select(this).property("value", deathdateFrom.getTime());
   }
-  deathdateTo = value;
-  updateArtistDatalist();
+  deathdateTo = value; 
   deathdateToSilderValue.text(value.toISOString().split("T")[0]);
 }).on("mouseup", function() {
   do_updates_on_visuals();
@@ -348,7 +344,6 @@ solo_checkbox.on("change", function() {
   solo_bool = isChecked;
   do_updates_on_visuals()
   console.log("Checkbox Solo is checked:", isChecked);
-  updateArtistDatalist();
 });
 
 group_checkbox.on("change", function() {
@@ -356,7 +351,6 @@ group_checkbox.on("change", function() {
   group_bool = isChecked;
   do_updates_on_visuals()
   console.log("Checkbox Group is checked:", isChecked);
-  updateArtistDatalist();
 });
 
 auction_checkbox.on("change", function() {
@@ -364,7 +358,6 @@ auction_checkbox.on("change", function() {
   auction_bool = isChecked;
   do_updates_on_visuals()
   console.log("Checkbox Aution is checked:", isChecked);
-  updateArtistDatalist();
 });
 
 d3.select(sidebar).append("h4").text("Gender").style("margin-bottom", "5px");
@@ -398,7 +391,6 @@ male_checkbox.on("change", function() {
   male_bool = isChecked;
   do_updates_on_visuals()
   console.log("Male checkbox is checked:", isChecked);
-  updateArtistDatalist();
 });
 
 female_checkbox.on("change", function() {
@@ -406,7 +398,6 @@ female_checkbox.on("change", function() {
   female_bool = isChecked;
   do_updates_on_visuals()
   console.log("Female checkbox is checked:", isChecked);
-  updateArtistDatalist();
 });
 
 d3.select(sidebar).append("h4").text("Event location").style("margin-bottom", "5px");
@@ -563,8 +554,6 @@ async function updateArtistDatalist() {
   console.log("Artists loaded into datalist.");
 }
 
-// Call the function to initialize the datalist
-updateArtistDatalist();
 //Initially only the map view is shown
 //so we deactivate some sidebar elements
 toggleSidebarElementsForGraphView(false);
@@ -575,6 +564,11 @@ artistInput.on("change", function () {
   console.log("Selected artist:", selectedArtist);
 
   // You can process the selected artist here (e.g., filtering visualizations)
+});
+
+artistInput.on("focus", function () {
+  console.log("Artist input field clicked, updating artist list...");
+  updateArtistDatalist();
 });
 
 
